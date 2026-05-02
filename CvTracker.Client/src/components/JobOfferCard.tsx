@@ -11,7 +11,7 @@ interface JobOfferCardProps {
 export default function JobOfferCard({ jobOffer }: JobOfferCardProps) {
   const navigate = useNavigate()
 
-  const goToEditOffertById = async (id : number) => {
+  const goToEditOfferById = (id : number) => {
   navigate(`./edit/${id}`)
 }
 
@@ -54,7 +54,7 @@ export default function JobOfferCard({ jobOffer }: JobOfferCardProps) {
             <span>{jobOffer.benefits}</span>
           </div>
 
-        <button className='btn' onClick={() => goToEditOffertById(jobOffer.id)}>Edytuj oferte</button>
+        <button className='btn' onClick={() => goToEditOfferById(jobOffer.id)}>Edytuj ofertę</button>
       </div>
     </div>
   );
