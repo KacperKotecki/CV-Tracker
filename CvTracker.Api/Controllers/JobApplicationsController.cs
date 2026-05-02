@@ -81,6 +81,20 @@ public class JobApplicationsController : ControllerBase
 
     }
 
+    [HttpPatch("{id}/status")]
+    public async Task<ActionResult> UpdateStatus(int id, [FromBody] Status status)
+    {
+        var jobOffer = await GetJobOfferByIdAsync(id);
+        if (jobOffer == null)
+        {
+            return NotFound();
+        }
+
+        jobOffer.Status = status;
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
     [NonAction]
     private async Task<JobOffer?> GetJobOfferByIdAsync(int id)
     {

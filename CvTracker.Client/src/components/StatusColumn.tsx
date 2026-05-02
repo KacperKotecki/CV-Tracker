@@ -1,7 +1,7 @@
 import type { JobOffer } from "../../models/JobOffer";
 import type { ApplicationStatus } from "../../models/ApplicationStatus";
+import ApplicationCard from './ApplicationCard';
 import './StatusColumn.css';
-import './StatusCard.css';
 
 const statusLabels: Record<ApplicationStatus, string> = {
   Draft:                  'Draft',
@@ -18,11 +18,18 @@ const statusLabels: Record<ApplicationStatus, string> = {
 interface StatusColumnProps {
   status: ApplicationStatus
   offers: JobOffer[]
+  onDrop: (offerId: number, newStatus: ApplicationStatus) => void
 }
 
-export default function StatusColumn({ status, offers }: StatusColumnProps) {
+export default function StatusColumn({ status, offers, onDrop }: StatusColumnProps) {
   return (
-    <div className="status-column" data-status={status}>
+    <div className="status-column" 
+        data-status={status}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+        const offerId = Number(e.dataTransfer.getData('offerId'))
+        onDrop(offerId, status)
+  }}>
       <div className="status-column__header">
         <h2 className="status-column__title">{statusLabels[status]}</h2>
         <span className="status-column__count">{offers.length}</span>
@@ -33,19 +40,7 @@ export default function StatusColumn({ status, offers }: StatusColumnProps) {
           <p className="status-column__empty">Brak ofert</p>
         ) : (
           offers.map(offer => (
-            <div key={offer.id} className="status-card">
-              <p className="status-card__position">{offer.position}</p>
-              <p className="status-card__company">{offer.company?.companyName}</p>
-              {offer.salary ? (
-                <p className="status-card__salary">
-                  {offer.salary.toLocaleString('pl-PL')} PLN
-                </p>
-              ) : null}
-              <div className="status-card__tags">
-                {offer.contractType && <span className="tag">{offer.contractType}</span>}
-                {offer.workMode && <span className="tag">{offer.workMode}</span>}
-              </div>
-            </div>
+            <ApplicationCard key={offer.id} offer={offer} />
           ))
         )}
       </div>
