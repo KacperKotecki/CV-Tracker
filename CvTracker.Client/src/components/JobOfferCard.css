@@ -1,0 +1,67 @@
+.job-offer-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  transition: box-shadow 0.25s;
+
+  &:hover {
+    box-shadow: var(--shadow);
+  }
+}
+
+.job-offer-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+
+  h2 {
+    color: var(--text-h);
+    margin: 0;
+  }
+}
+
+.job-offer-card__salary {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 17px;
+  white-space: nowrap;
+}
+
+.job-offer-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.job-offer-card__company {
+  color: var(--text);
+  font-size: 14px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.job-offer-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.job-offer-card__row {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.job-offer-card__label {
+  color: var(--text);
+  font-weight: 500;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding-top: 2px;
+}

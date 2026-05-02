@@ -1,0 +1,6 @@
+@CvTracker.Api_HostAddress = http://localhost:5211
+
+GET {{CvTracker.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
