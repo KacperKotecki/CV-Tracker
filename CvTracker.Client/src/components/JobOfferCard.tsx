@@ -12,7 +12,7 @@ export default function JobOfferCard({ jobOffer }: JobOfferCardProps) {
   const navigate = useNavigate()
 
   const goToEditOfferById = (id : number) => {
-  navigate(`./edit/${id}`)
+  navigate(`/edit/${id}`)
 }
 
 
