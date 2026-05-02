@@ -2,8 +2,9 @@ import './App.css'
 import { Outlet, Route, Routes } from 'react-router-dom'
 import Header from './components/Header'
 import HomePage from './pages/HomePage'
-import AddOfferPage from './pages/AddOfferPage'
+import AddOfferPage from './pages/AddEditOfferPage'
 import OfferDetailPage from './pages/OfferDetailPage'
+import AddEditOfferPage from './pages/AddEditOfferPage'
 
 function Layout() {
   return (
@@ -22,7 +23,8 @@ export default function App() {
         <Routes>
             <Route element={<Layout />}>
                 <Route path="/" element={<HomePage />} />
-                <Route path="/add" element={<AddOfferPage />} />
+                <Route path="/add" element={<AddEditOfferPage />} />
+                <Route path="/edit/:id" element={<AddEditOfferPage />} />
                 <Route path="/offer/:id" element={<OfferDetailPage />} />
             </Route>
         </Routes>

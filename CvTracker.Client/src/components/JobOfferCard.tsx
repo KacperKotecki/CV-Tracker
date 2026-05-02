@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import type { JobOffer } from "../../models/JobOffer";
 import './JobOfferCard.css'
 
@@ -5,7 +6,16 @@ interface JobOfferCardProps {
   jobOffer: JobOffer
 }
 
+
+
 export default function JobOfferCard({ jobOffer }: JobOfferCardProps) {
+  const navigate = useNavigate()
+
+  const goToEditOffertById = async (id : number) => {
+  navigate(`./edit/${id}`)
+}
+
+
   return (
     <div className="job-offer-card">
       <div className="job-offer-card__header">
@@ -44,6 +54,7 @@ export default function JobOfferCard({ jobOffer }: JobOfferCardProps) {
             <span>{jobOffer.benefits}</span>
           </div>
 
+        <button className='btn' onClick={() => goToEditOffertById(jobOffer.id)}>Edytuj oferte</button>
       </div>
     </div>
   );

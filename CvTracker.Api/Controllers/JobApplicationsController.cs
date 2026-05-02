@@ -55,4 +55,39 @@ public class JobApplicationsController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = jobOfferCreated.Id }, jobOfferCreated);
 
     }
+
+    [HttpPut("{id}")]
+    public async Task<ActionResult<JobOffer>> Edit(int id, [FromBody] CreateJobOfferDto jobOffer)
+    {
+        var jobOfferToEdit = await JobOfferById(id);
+        if (jobOfferToEdit == null)
+        {
+            return NotFound();
+        }
+
+        jobOfferToEdit.Position = jobOffer.Position;
+        jobOfferToEdit.Salary = jobOffer.Salary;
+        jobOfferToEdit.ContractType = jobOffer.ContractType;
+        jobOfferToEdit.WorkLoad = jobOffer.WorkLoad;
+        jobOfferToEdit.WorkMode = jobOffer.WorkMode;
+        jobOfferToEdit.CompanyId = jobOffer.CompanyId;
+        jobOfferToEdit.Skills = jobOffer.Skills;
+        jobOfferToEdit.OurRequirements = jobOffer.OurRequirements;
+        jobOfferToEdit.WhatWeOffer = jobOffer.WhatWeOffer;
+        jobOfferToEdit.Benefits = jobOffer.Benefits;
+        
+        _context.JobOffers.Update(jobOfferToEdit);
+        await _context.SaveChangesAsync();
+        return Ok(jobOfferToEdit);
+
+    }
+
+    public async Task<JobOffer?> JobOfferById(int id)
+    {
+        var jobOffer = await _context.JobOffers
+            .Include(j => j.Company)
+            .FirstOrDefaultAsync(j => j.Id == id);
+
+        return jobOffer;
+    }
 }
