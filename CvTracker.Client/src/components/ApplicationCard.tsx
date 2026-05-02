@@ -1,0 +1,1 @@
+export default function ApplicationCard({ offer }: { offer: ApplicationCard }) {
