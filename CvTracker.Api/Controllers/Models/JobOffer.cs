@@ -12,13 +12,9 @@ public class JobOffer
     public required int CompanyId { get; set; }
     public Company? Company { get; set; }
 
-    public ICollection<SkillItem>? Skills { get; set; }
-    
-
-    public ICollection<string>? OurRequirements { get; set; }
-
-    public ICollection<string>? WhatWeOffer { get; set; }
-
-    public ICollection<string>? Benefits { get; set; }
+    public string? Skills { get; set; }
+    public string? OurRequirements { get; set; }
+    public string? WhatWeOffer { get; set; }
+    public string? Benefits { get; set; }
 }
 

@@ -9,8 +9,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CvTracker.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260403131707_InitialMigration")]
-    partial class InitialMigration
+    [Migration("20260502160351_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -63,6 +63,9 @@ namespace CvTracker.Api.Migrations
                     b.Property<decimal>("Salary")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Skills")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("WhatWeOffer")
                         .HasColumnType("TEXT");
 
@@ -87,16 +90,11 @@ namespace CvTracker.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("JobOfferId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("JobOfferId");
 
                     b.ToTable("SkillItems");
                 });
@@ -110,18 +108,6 @@ namespace CvTracker.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Company");
-                });
-
-            modelBuilder.Entity("SkillItem", b =>
-                {
-                    b.HasOne("JobOffer", null)
-                        .WithMany("Skills")
-                        .HasForeignKey("JobOfferId");
-                });
-
-            modelBuilder.Entity("JobOffer", b =>
-                {
-                    b.Navigation("Skills");
                 });
 #pragma warning restore 612, 618
         }

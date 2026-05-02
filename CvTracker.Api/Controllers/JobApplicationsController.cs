@@ -19,7 +19,6 @@ public class JobApplicationsController : ControllerBase
     {
         var jobOffers = await _context.JobOffers
             .Include(j => j.Company)
-            .Include(j => j.Skills)
             .ToListAsync();
         return Ok(jobOffers);
     }
@@ -28,7 +27,6 @@ public class JobApplicationsController : ControllerBase
     {
         var jobOffer = await _context.JobOffers
             .Include(j => j.Company)
-            .Include(j => j.Skills)
             .FirstOrDefaultAsync(j => j.Id == id);
         if (jobOffer == null)
         {
@@ -47,18 +45,10 @@ public class JobApplicationsController : ControllerBase
             WorkLoad = jobOffer.WorkLoad,
             WorkMode = jobOffer.WorkMode,
             CompanyId = jobOffer.CompanyId,
-            Skills = string.IsNullOrWhiteSpace(jobOffer.Skills)
-                ? null
-                : new List<SkillItem> { new SkillItem { Name = jobOffer.Skills } },
-            OurRequirements = string.IsNullOrWhiteSpace(jobOffer.OurRequirements)
-                ? null
-                : new List<string> { jobOffer.OurRequirements },
-            WhatWeOffer = string.IsNullOrWhiteSpace(jobOffer.WhatWeOffer)
-                ? null
-                : new List<string> { jobOffer.WhatWeOffer },
-            Benefits = string.IsNullOrWhiteSpace(jobOffer.Benefits)
-                ? null
-                : new List<string> { jobOffer.Benefits }
+            Skills = jobOffer.Skills,
+            OurRequirements = jobOffer.OurRequirements,
+            WhatWeOffer = jobOffer.WhatWeOffer,
+            Benefits = jobOffer.Benefits
         };
         _context.JobOffers.Add(jobOfferCreated);
         await _context.SaveChangesAsync();

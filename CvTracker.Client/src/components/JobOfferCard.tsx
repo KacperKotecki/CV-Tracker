@@ -24,30 +24,26 @@ export default function JobOfferCard({ jobOffer }: JobOfferCardProps) {
       </p>
 
       <div className="job-offer-card__body">
-        {jobOffer.skills && jobOffer.skills.length > 0 && (
           <div className="job-offer-card__row">
             <span className="job-offer-card__label">Umiejętności</span>
-            <span>{jobOffer.skills.map(s => s.name).join(', ')}</span>
+            <span>{jobOffer.skills}</span>
           </div>
-        )}
-        {jobOffer.ourRequirements && (
+        
           <div className="job-offer-card__row">
             <span className="job-offer-card__label">Wymagania</span>
             <span>{jobOffer.ourRequirements}</span>
           </div>
-        )}
-        {jobOffer.whatWeOffer && (
+        
           <div className="job-offer-card__row">
             <span className="job-offer-card__label">Co oferujemy</span>
             <span>{jobOffer.whatWeOffer}</span>
           </div>
-        )}
-        {jobOffer.benefits && (
+
           <div className="job-offer-card__row">
             <span className="job-offer-card__label">Benefity</span>
             <span>{jobOffer.benefits}</span>
           </div>
-        )}
+
       </div>
     </div>
   );

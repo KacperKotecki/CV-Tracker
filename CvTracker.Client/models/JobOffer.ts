@@ -1,5 +1,4 @@
 import type { Company } from './Company'
-import type { SkillItem } from './SkillItem'
 
 export interface JobOffer {
   id: number
@@ -9,7 +8,7 @@ export interface JobOffer {
   workMode: string
   workLoad: string
   company: Company
-  skills: SkillItem[]
+  skills: string
   ourRequirements: string
   whatWeOffer: string
   benefits: string

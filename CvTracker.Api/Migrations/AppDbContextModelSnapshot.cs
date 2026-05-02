@@ -60,6 +60,9 @@ namespace CvTracker.Api.Migrations
                     b.Property<decimal>("Salary")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Skills")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("WhatWeOffer")
                         .HasColumnType("TEXT");
 
@@ -84,16 +87,11 @@ namespace CvTracker.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("JobOfferId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("JobOfferId");
 
                     b.ToTable("SkillItems");
                 });
@@ -107,18 +105,6 @@ namespace CvTracker.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Company");
-                });
-
-            modelBuilder.Entity("SkillItem", b =>
-                {
-                    b.HasOne("JobOffer", null)
-                        .WithMany("Skills")
-                        .HasForeignKey("JobOfferId");
-                });
-
-            modelBuilder.Entity("JobOffer", b =>
-                {
-                    b.Navigation("Skills");
                 });
 #pragma warning restore 612, 618
         }
