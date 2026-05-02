@@ -485,6 +485,8 @@ appsettings.Development.json
 
 #Database files
 *.db
-
+*.db-shm
+*.db-wal
 .DS_Store
+
 .vscode/
