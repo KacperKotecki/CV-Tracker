@@ -2,7 +2,6 @@ import './App.css'
 import { Outlet, Route, Routes } from 'react-router-dom'
 import Header from './components/Header'
 import HomePage from './pages/HomePage'
-import AddOfferPage from './pages/AddEditOfferPage'
 import OfferDetailPage from './pages/OfferDetailPage'
 import AddEditOfferPage from './pages/AddEditOfferPage'
 
