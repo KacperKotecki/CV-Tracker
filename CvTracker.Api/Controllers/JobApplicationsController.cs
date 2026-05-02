@@ -25,9 +25,7 @@ public class JobApplicationsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<JobOffer>> GetById(int id)
     {
-        var jobOffer = await _context.JobOffers
-            .Include(j => j.Company)
-            .FirstOrDefaultAsync(j => j.Id == id);
+        var jobOffer = await GetJobOfferByIdAsync(id);
         if (jobOffer == null)
         {
             return NotFound();
@@ -35,7 +33,7 @@ public class JobApplicationsController : ControllerBase
         return Ok(jobOffer);
     }
     [HttpPost]
-    public async Task<ActionResult<JobOffer>> Create([FromBody] CreateJobOfferDto jobOffer)
+    public async Task<ActionResult<JobOffer>> Create([FromBody] JobOfferDto jobOffer)
     {
         var jobOfferCreated = new JobOffer
         {
@@ -54,5 +52,40 @@ public class JobApplicationsController : ControllerBase
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetById), new { id = jobOfferCreated.Id }, jobOfferCreated);
 
+    }
+
+    [HttpPut("{id}")]
+    public async Task<ActionResult> Edit(int id, [FromBody] JobOfferDto jobOffer)
+    {
+        var jobOfferToEdit = await GetJobOfferByIdAsync(id);
+        if (jobOfferToEdit == null)
+        {
+            return NotFound();
+        }
+
+        jobOfferToEdit.Position = jobOffer.Position;
+        jobOfferToEdit.Salary = jobOffer.Salary;
+        jobOfferToEdit.ContractType = jobOffer.ContractType;
+        jobOfferToEdit.WorkLoad = jobOffer.WorkLoad;
+        jobOfferToEdit.WorkMode = jobOffer.WorkMode;
+        jobOfferToEdit.CompanyId = jobOffer.CompanyId;
+        jobOfferToEdit.Skills = jobOffer.Skills;
+        jobOfferToEdit.OurRequirements = jobOffer.OurRequirements;
+        jobOfferToEdit.WhatWeOffer = jobOffer.WhatWeOffer;
+        jobOfferToEdit.Benefits = jobOffer.Benefits;
+        
+        await _context.SaveChangesAsync();
+        return NoContent();
+
+    }
+
+    [NonAction]
+    private async Task<JobOffer?> GetJobOfferByIdAsync(int id)
+    {
+        var jobOffer = await _context.JobOffers
+            .Include(j => j.Company)
+            .FirstOrDefaultAsync(j => j.Id == id);
+
+        return jobOffer;
     }
 }
