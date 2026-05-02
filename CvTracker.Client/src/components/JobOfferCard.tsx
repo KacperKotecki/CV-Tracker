@@ -54,6 +54,11 @@ export default function JobOfferCard({ jobOffer }: JobOfferCardProps) {
             <span>{jobOffer.benefits}</span>
           </div>
 
+          <div className="job-offer-card__row">
+            <span className="job-offer-card__label">Status</span>
+            <span>{jobOffer.status}</span>
+          </div>
+
         <button className='btn' onClick={() => goToEditOfferById(jobOffer.id)}>Edytuj ofertę</button>
       </div>
     </div>

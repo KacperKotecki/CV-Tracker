@@ -12,5 +12,6 @@ export interface JobOffer {
   ourRequirements: string
   whatWeOffer: string
   benefits: string
+  status: string
 }
 
