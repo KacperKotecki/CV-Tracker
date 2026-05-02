@@ -33,7 +33,7 @@ public class JobApplicationsController : ControllerBase
         return Ok(jobOffer);
     }
     [HttpPost]
-    public async Task<ActionResult<JobOffer>> Create([FromBody] CreateJobOfferDto jobOffer)
+    public async Task<ActionResult<JobOffer>> Create([FromBody] JobOfferDto jobOffer)
     {
         var jobOfferCreated = new JobOffer
         {
@@ -55,7 +55,7 @@ public class JobApplicationsController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<JobOffer>> Edit(int id, [FromBody] CreateJobOfferDto jobOffer)
+    public async Task<ActionResult> Edit(int id, [FromBody] JobOfferDto jobOffer)
     {
         var jobOfferToEdit = await GetJobOfferByIdAsync(id);
         if (jobOfferToEdit == null)
