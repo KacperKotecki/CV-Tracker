@@ -59,7 +59,7 @@ public class JobApplicationsController : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult<JobOffer>> Edit(int id, [FromBody] CreateJobOfferDto jobOffer)
     {
-        var jobOfferToEdit = await JobOfferById(id);
+        var jobOfferToEdit = await GetJobOfferByIdAsync(id);
         if (jobOfferToEdit == null)
         {
             return NotFound();
@@ -76,13 +76,13 @@ public class JobApplicationsController : ControllerBase
         jobOfferToEdit.WhatWeOffer = jobOffer.WhatWeOffer;
         jobOfferToEdit.Benefits = jobOffer.Benefits;
         
-        _context.JobOffers.Update(jobOfferToEdit);
         await _context.SaveChangesAsync();
         return Ok(jobOfferToEdit);
 
     }
 
-    public async Task<JobOffer?> JobOfferById(int id)
+    [NonAction]
+    private async Task<JobOffer?> GetJobOfferByIdAsync(int id)
     {
         var jobOffer = await _context.JobOffers
             .Include(j => j.Company)
