@@ -25,9 +25,7 @@ public class JobApplicationsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<JobOffer>> GetById(int id)
     {
-        var jobOffer = await _context.JobOffers
-            .Include(j => j.Company)
-            .FirstOrDefaultAsync(j => j.Id == id);
+        var jobOffer = await GetJobOfferByIdAsync(id);
         if (jobOffer == null)
         {
             return NotFound();
@@ -77,7 +75,7 @@ public class JobApplicationsController : ControllerBase
         jobOfferToEdit.Benefits = jobOffer.Benefits;
         
         await _context.SaveChangesAsync();
-        return Ok(jobOfferToEdit);
+        return NoContent();
 
     }
 
