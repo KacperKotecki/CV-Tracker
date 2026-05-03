@@ -25,7 +25,15 @@ export default function Dashboard() {
     }
     
     useEffect(() => {
-        fetch('/api/jobapplications').then(r => r.json()).then(setOffers)
+        const load = async () => {
+            const response = await fetch('/api/jobapplications')
+            if (!response.ok) {
+                window.alert('Nie udało się załadować ofert')
+                return
+            }
+            setOffers(await response.json())
+        }
+        load()
     }, [])
     return (
         <div className="status-board">
