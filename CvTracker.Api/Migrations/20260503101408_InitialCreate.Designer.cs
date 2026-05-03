@@ -9,8 +9,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CvTracker.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260502202023_AddStatusToOffer")]
-    partial class AddStatusToOffer
+    [Migration("20260503101408_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
