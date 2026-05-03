@@ -42,7 +42,7 @@ export default function Dashboard() {
                     key={status}
                     status={status}
                     offers={offers.filter(o => o.status === status)}
-                    onDrop={handleDrop}
+                    onOfferDrop={handleDrop}
                 />
             ))}
         </div>

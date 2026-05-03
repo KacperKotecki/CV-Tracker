@@ -18,10 +18,10 @@ const statusLabels: Record<ApplicationStatus, string> = {
 interface StatusColumnProps {
   status: ApplicationStatus
   offers: JobOffer[]
-  onDrop: (offerId: number, newStatus: ApplicationStatus) => void
+  onOfferDrop: (offerId: number, newStatus: ApplicationStatus) => void
 }
 
-export default function StatusColumn({ status, offers, onDrop }: StatusColumnProps) {
+export default function StatusColumn({ status, offers, onOfferDrop }: StatusColumnProps) {
   return (
     <div className="status-column" 
         data-status={status}
@@ -32,7 +32,7 @@ export default function StatusColumn({ status, offers, onDrop }: StatusColumnPro
                 return
             }
 
-        onDrop(offerId, status)
+        onOfferDrop(offerId, status)
   }}>
       <div className="status-column__header">
         <h2 className="status-column__title">{statusLabels[status]}</h2>
