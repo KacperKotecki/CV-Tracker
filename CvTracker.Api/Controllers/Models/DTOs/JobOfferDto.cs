@@ -18,5 +18,5 @@ public class JobOfferDto
     public string? WhatWeOffer { get; set; }
     public string? Benefits { get; set; }
 
-    public Status Status { get; set; }
+    public ApplicationStatus Status { get; set; }
 }

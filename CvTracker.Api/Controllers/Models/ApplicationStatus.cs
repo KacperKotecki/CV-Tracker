@@ -1,5 +1,5 @@
 namespace CvTracker.Api.Models;
-public enum Status
+public enum ApplicationStatus
 {
     Draft,
     Applied,

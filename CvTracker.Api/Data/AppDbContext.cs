@@ -17,7 +17,7 @@ public class AppDbContext : DbContext
             .Property(x => x.WorkMode)
             .HasConversion<string>();
        modelBuilder.Entity<JobOffer>()
-            .Property(x => x.Skills)
+            .Property(x => x.Status)
             .HasConversion<string>();
 
         
