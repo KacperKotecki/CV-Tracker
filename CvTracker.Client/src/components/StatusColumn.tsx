@@ -27,7 +27,11 @@ export default function StatusColumn({ status, offers, onDrop }: StatusColumnPro
         data-status={status}
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
-        const offerId = Number(e.dataTransfer.getData('offerId'))
+            const offerId = Number(e.dataTransfer.getData('offerId'))
+            if (!Number.isFinite(offerId) || offerId <= 0) {
+                return
+            }
+
         onDrop(offerId, status)
   }}>
       <div className="status-column__header">
