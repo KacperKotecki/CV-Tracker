@@ -7,14 +7,21 @@ import StatusColumn from "../components/StatusColumn"
 export default function OfferHomePage() {
     const [offers, setOffers] = useState<JobOffer[]>([])
     
-    const handleDrop = (offerId: number, newStatus: ApplicationStatus) => {
-        setOffers(prev =>
-        prev.map(o => o.id === offerId ? { ...o, status: newStatus } : o)
-    )
-        fetch(`/api/jobapplications/${offerId}/status`, {
+    const handleDrop = async (offerId: number, newStatus: ApplicationStatus) => {
+        const response = await fetch(`/api/jobapplications/${offerId}/status`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newStatus) })
+        
+        if(!response.ok) {
+            window.alert("Nie udało się zaktualizować statusu oferty")
+            return
+        }
+        
+        setOffers(prev =>
+        prev.map(o => o.id === offerId ? { ...o, status: newStatus } : o)
+    )
+       
     }
     
     useEffect(() => {
