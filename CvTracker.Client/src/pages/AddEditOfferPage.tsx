@@ -135,7 +135,6 @@ const addEditJobOffer = async () => {
       <textarea className="form-field" rows={3} value={form.whatWeOffer} onChange={(e) => setForm({ ...form, whatWeOffer: e.target.value })} placeholder="Co oferujemy" />
       <textarea className="form-field" rows={2} value={form.benefits} onChange={(e) => setForm({ ...form, benefits: e.target.value })} placeholder="Benefity" />
       <select className="form-field" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as ApplicationStatus })}>
-        <option value=''>Wybierz status</option>
         {applicationStatusOptions.map(option => (
           <option key={option} value={option}>{option}</option>
         ))}
