@@ -4,7 +4,7 @@ import { applicationStatusOptions, type ApplicationStatus } from "../../models/A
 import StatusColumn from "../components/StatusColumn"
 
 
-export default function OfferHomePage() {
+export default function Dashboard() {
     const [offers, setOffers] = useState<JobOffer[]>([])
     
     const handleDrop = async (offerId: number, newStatus: ApplicationStatus) => {
