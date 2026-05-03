@@ -8,21 +8,24 @@ export default function Dashboard() {
     const [offers, setOffers] = useState<JobOffer[]>([])
     
     const handleDrop = async (offerId: number, newStatus: ApplicationStatus) => {
-        const response = await fetch(`/api/jobapplications/${offerId}/status`, {
+        try {
+            const response = await fetch(`/api/jobapplications/${offerId}/status`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newStatus) })
         
-        if(!response.ok) {
-            window.alert("Nie udało się zaktualizować statusu oferty")
-            return
-        }
-        
-        setOffers(prev =>
-        prev.map(o => o.id === offerId ? { ...o, status: newStatus } : o)
-    )
-       
-    }
+            if(!response.ok) {
+                window.alert("Nie udało się zaktualizować statusu oferty")
+                return
+            }
+            
+            setOffers(prev =>
+            prev.map(o => o.id === offerId ? { ...o, status: newStatus } : o)
+    )}         
+    catch {
+        window.alert("Nie udało się zaktualizować statusu oferty")
+    }    
+}
     
     useEffect(() => {
         const load = async () => {
