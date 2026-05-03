@@ -23,6 +23,9 @@
   box-shadow: var(--shadow);
   border-color: var(--accent-border);
 }
+.status-card.dragging {
+    opacity: 0;
+}
 
 /* ── Header: position + company ────────────────────────────── */
 

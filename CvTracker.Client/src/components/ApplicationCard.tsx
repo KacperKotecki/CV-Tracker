@@ -9,7 +9,15 @@ export default function ApplicationCard({ offer }: ApplicationCardProps) {
   return (
     <div className="status-card"
         draggable={true}
-        onDragStart={(e) => e.dataTransfer.setData('offerId', String(offer.id))}>
+        onDragStart={(e) => {
+            e.dataTransfer.setData('offerId', String(offer.id))
+            setTimeout(() => {
+                e.currentTarget.classList.add('dragging')
+            }, 0)
+        }}
+        onDragEnd={(e) => {
+            e.currentTarget.classList.remove('dragging')
+        }}>
       <p className="status-card__position">{offer.position}</p>
       <p className="status-card__company">{offer.company?.companyName}</p>
       {offer.salary ? (
