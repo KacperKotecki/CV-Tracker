@@ -46,7 +46,8 @@ public class JobApplicationsController : ControllerBase
             Skills = jobOffer.Skills,
             OurRequirements = jobOffer.OurRequirements,
             WhatWeOffer = jobOffer.WhatWeOffer,
-            Benefits = jobOffer.Benefits
+            Benefits = jobOffer.Benefits,
+            Status = jobOffer.Status
         };
         _context.JobOffers.Add(jobOfferCreated);
         await _context.SaveChangesAsync();
@@ -73,10 +74,25 @@ public class JobApplicationsController : ControllerBase
         jobOfferToEdit.OurRequirements = jobOffer.OurRequirements;
         jobOfferToEdit.WhatWeOffer = jobOffer.WhatWeOffer;
         jobOfferToEdit.Benefits = jobOffer.Benefits;
-        
+        jobOfferToEdit.Status = jobOffer.Status;
+
         await _context.SaveChangesAsync();
         return NoContent();
 
+    }
+
+    [HttpPatch("{id}/status")]
+    public async Task<ActionResult> UpdateStatus(int id, [FromBody] ApplicationStatus status)
+    {
+        var jobOffer = await GetJobOfferByIdAsync(id);
+        if (jobOffer == null)
+        {
+            return NotFound();
+        }
+
+        jobOffer.Status = status;
+        await _context.SaveChangesAsync();
+        return NoContent();
     }
 
     [NonAction]

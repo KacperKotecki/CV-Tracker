@@ -25,19 +25,6 @@ namespace CvTracker.Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "SkillItems",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Name = table.Column<string>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_SkillItems", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "JobOffers",
                 columns: table => new
                 {
@@ -52,7 +39,8 @@ namespace CvTracker.Api.Migrations
                     Skills = table.Column<string>(type: "TEXT", nullable: true),
                     OurRequirements = table.Column<string>(type: "TEXT", nullable: true),
                     WhatWeOffer = table.Column<string>(type: "TEXT", nullable: true),
-                    Benefits = table.Column<string>(type: "TEXT", nullable: true)
+                    Benefits = table.Column<string>(type: "TEXT", nullable: true),
+                    Status = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -76,9 +64,6 @@ namespace CvTracker.Api.Migrations
         {
             migrationBuilder.DropTable(
                 name: "JobOffers");
-
-            migrationBuilder.DropTable(
-                name: "SkillItems");
 
             migrationBuilder.DropTable(
                 name: "Companies");

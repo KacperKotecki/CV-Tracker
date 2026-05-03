@@ -1,0 +1,118 @@
+/* ── Status board ──────────────────────────────────────────── */
+
+.status-board {
+  display: flex;
+  gap: 5px;
+  align-items: flex-start;
+  padding: 24px 16px;
+  overflow-x: auto;
+  /* keep columns from being squeezed on large screens */
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* ── Single column ─────────────────────────────────────────── */
+
+.status-column {
+  flex: 0 0 260px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--code-bg);
+  border-radius: 14px;
+  padding: 16px 5px;  min-height: 80vh;  box-sizing: border-box;
+  /* only the top accent line — no surrounding border */
+  border: none;
+  border-top: 3px solid var(--col-accent, var(--border));
+}
+
+.status-column__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.status-column__title {
+  font-family: var(--heading);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--text-h);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-column__count {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 99px;
+  /* badge colour matches the column accent line */
+  background: color-mix(in srgb, var(--col-accent, var(--accent)) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--col-accent, var(--accent)) 40%, transparent);
+  color: var(--col-accent, var(--accent));
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-column__cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 48px;       /* empty column still visible */
+}
+
+.status-column__empty {
+  padding: 12px 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text);
+  opacity: 0.5;
+}
+
+/* ── Colour-coded column accent lines ──────────────────────── */
+
+/* Draft: neutral */
+.status-column[data-status="Draft"]                    { --col-accent: #9ca3af; }
+/* Active funnel: single-hue blue progression (lighter → darker) */
+.status-column[data-status="Applied"]                  { --col-accent: #93c5fd; }
+.status-column[data-status="HRScreening"]              { --col-accent: #60a5fa; }
+.status-column[data-status="TechnicalInterview"]       { --col-accent: #3b82f6; }
+.status-column[data-status="LiveCodingOrAssignment"]   { --col-accent: #2563eb; }
+.status-column[data-status="AwaitingFeedback"]         { --col-accent: #1d4ed8; }
+/* Terminal states */
+.status-column[data-status="Rejected"]                 { --col-accent: #dc2626; }
+.status-column[data-status="Accepted"]                 { --col-accent: #16a34a; }
+.status-column[data-status="Ghosted"]                  { --col-accent: #4b5563; }
+
+/* accent line already merged into main .status-column rule above */
+
+/* ── Responsive ────────────────────────────────────────────── */
+
+/*
+  On narrow screens we switch from horizontal scroll to a
+  stacked single-column layout so columns stack vertically.
+*/
+@media (max-width: 640px) {
+  .status-board {
+    flex-direction: column;
+    overflow-x: visible;
+    padding: 16px 8px;
+    gap: 16px;
+  }
+
+  .status-column {
+    flex: none;
+    width: 100%;
+  }
+}

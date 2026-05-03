@@ -16,5 +16,7 @@ public class JobOffer
     public string? OurRequirements { get; set; }
     public string? WhatWeOffer { get; set; }
     public string? Benefits { get; set; }
-}
 
+    public ApplicationStatus Status { get; set; }
+
+}

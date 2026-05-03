@@ -63,3 +63,25 @@
     opacity: 0.85;
   }
 }
+
+/* secondary / ghost button — used for Dashboard */
+.header__link--outline {
+  color: var(--text);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  transition: color 0.15s, border-color 0.15s;
+
+  &:hover {
+    color: var(--text-h);
+    border-color: color-mix(in srgb, var(--border) 60%, var(--accent));
+  }
+
+  &.active {
+    color: var(--accent);
+    border-color: var(--accent-border);
+  }
+}

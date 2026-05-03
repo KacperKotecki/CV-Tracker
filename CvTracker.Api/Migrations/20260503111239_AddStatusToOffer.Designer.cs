@@ -9,8 +9,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CvTracker.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260502160351_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260503111239_AddStatusToOffer")]
+    partial class AddStatusToOffer
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -66,6 +66,10 @@ namespace CvTracker.Api.Migrations
                     b.Property<string>("Skills")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("WhatWeOffer")
                         .HasColumnType("TEXT");
 
@@ -82,21 +86,6 @@ namespace CvTracker.Api.Migrations
                     b.HasIndex("CompanyId");
 
                     b.ToTable("JobOffers");
-                });
-
-            modelBuilder.Entity("SkillItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SkillItems");
                 });
 
             modelBuilder.Entity("JobOffer", b =>

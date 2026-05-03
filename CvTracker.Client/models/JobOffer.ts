@@ -1,3 +1,4 @@
+import type { ApplicationStatus } from './ApplicationStatus'
 import type { Company } from './Company'
 
 export interface JobOffer {
@@ -12,5 +13,6 @@ export interface JobOffer {
   ourRequirements: string
   whatWeOffer: string
   benefits: string
+  status: ApplicationStatus
 }
 
