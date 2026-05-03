@@ -3,15 +3,10 @@ import { contractTypeOptions } from "../../models/ContractType"
 import { workModeOptions } from "../../models/WorkMode"
 import { workLoadOptions } from "../../models/WorkLoad"
 import type { Company } from "../../models/Company"
-import type { JobOffer } from "../../models/JobOffer"
 import { useNavigate, useParams } from "react-router-dom"
 import AddCompanyForm from "../components/AddCompanyForm"
 import { applicationStatusOptions, type ApplicationStatus } from "../../models/ApplicationStatus"
 
-interface AddJobOfferFormProps {
-  companies: Company[]
-  onJobOfferAdded: (jobOffer: JobOffer) => void
-}
 
 export default function AddEditOfferPage() {
   const { id } = useParams()
