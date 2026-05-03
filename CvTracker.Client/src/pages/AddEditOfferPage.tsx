@@ -6,7 +6,7 @@ import type { Company } from "../../models/Company"
 import type { JobOffer } from "../../models/JobOffer"
 import { useNavigate, useParams } from "react-router-dom"
 import AddCompanyForm from "../components/AddCompanyForm"
-import { applicationStatusOptions } from "../../models/ApplicationStatus"
+import { applicationStatusOptions, type ApplicationStatus } from "../../models/ApplicationStatus"
 
 interface AddJobOfferFormProps {
   companies: Company[]
@@ -27,7 +27,7 @@ export default function AddEditOfferPage() {
     ourRequirements: '',
     whatWeOffer: '',
     benefits: '',
-    status: 'Draft'
+    status: applicationStatusOptions[0] as ApplicationStatus
   }
 
 
@@ -134,7 +134,7 @@ const addEditJobOffer = async () => {
       <textarea className="form-field" rows={3} value={form.ourRequirements} onChange={(e) => setForm({ ...form, ourRequirements: e.target.value })} placeholder="Nasze wymagania" />
       <textarea className="form-field" rows={3} value={form.whatWeOffer} onChange={(e) => setForm({ ...form, whatWeOffer: e.target.value })} placeholder="Co oferujemy" />
       <textarea className="form-field" rows={2} value={form.benefits} onChange={(e) => setForm({ ...form, benefits: e.target.value })} placeholder="Benefity" />
-      <select className="form-field" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+      <select className="form-field" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as ApplicationStatus })}>
         <option value=''>Wybierz status</option>
         {applicationStatusOptions.map(option => (
           <option key={option} value={option}>{option}</option>
