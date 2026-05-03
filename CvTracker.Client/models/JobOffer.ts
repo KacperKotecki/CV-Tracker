@@ -1,5 +1,4 @@
 import type { ApplicationStatus } from './ApplicationStatus'
-import type { Company } from './Company'
 
 export interface JobOffer {
   id: number
@@ -8,11 +7,12 @@ export interface JobOffer {
   contractType: string
   workMode: string
   workLoad: string
-  company: Company
-  skills: string
-  ourRequirements: string
-  whatWeOffer: string
-  benefits: string
+  companyName: string | null
+  location: string | null
+  skills: string | null
+  ourRequirements: string | null
+  whatWeOffer: string | null
+  benefits: string | null
   status: ApplicationStatus
 }
 

@@ -17,9 +17,7 @@ public class JobApplicationsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<ICollection<JobOffer>>> GetAll()
     {
-        var jobOffers = await _context.JobOffers
-            .Include(j => j.Company)
-            .ToListAsync();
+        var jobOffers = await _context.JobOffers.ToListAsync();
         return Ok(jobOffers);
     }
     [HttpGet("{id}")]
@@ -42,7 +40,8 @@ public class JobApplicationsController : ControllerBase
             ContractType = jobOffer.ContractType,
             WorkLoad = jobOffer.WorkLoad,
             WorkMode = jobOffer.WorkMode,
-            CompanyId = jobOffer.CompanyId,
+            CompanyName = jobOffer.CompanyName,
+            Location = jobOffer.Location,
             Skills = jobOffer.Skills,
             OurRequirements = jobOffer.OurRequirements,
             WhatWeOffer = jobOffer.WhatWeOffer,
@@ -69,7 +68,8 @@ public class JobApplicationsController : ControllerBase
         jobOfferToEdit.ContractType = jobOffer.ContractType;
         jobOfferToEdit.WorkLoad = jobOffer.WorkLoad;
         jobOfferToEdit.WorkMode = jobOffer.WorkMode;
-        jobOfferToEdit.CompanyId = jobOffer.CompanyId;
+        jobOfferToEdit.CompanyName = jobOffer.CompanyName;
+        jobOfferToEdit.Location = jobOffer.Location;
         jobOfferToEdit.Skills = jobOffer.Skills;
         jobOfferToEdit.OurRequirements = jobOffer.OurRequirements;
         jobOfferToEdit.WhatWeOffer = jobOffer.WhatWeOffer;
@@ -98,10 +98,6 @@ public class JobApplicationsController : ControllerBase
     [NonAction]
     private async Task<JobOffer?> GetJobOfferByIdAsync(int id)
     {
-        var jobOffer = await _context.JobOffers
-            .Include(j => j.Company)
-            .FirstOrDefaultAsync(j => j.Id == id);
-
-        return jobOffer;
+        return await _context.JobOffers.FirstOrDefaultAsync(j => j.Id == id);
     }
 }

@@ -19,7 +19,7 @@ export default function ApplicationCard({ offer }: ApplicationCardProps) {
             e.currentTarget.classList.remove('dragging')
         }}>
       <p className="status-card__position">{offer.position}</p>
-      <p className="status-card__company">{offer.company?.companyName}</p>
+      <p className="status-card__company">{offer.companyName}</p>
       {offer.salary ? (
         <p className="status-card__salary">
           {offer.salary.toLocaleString('pl-PL')} PLN

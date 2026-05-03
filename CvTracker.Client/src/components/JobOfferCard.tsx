@@ -30,7 +30,7 @@ export default function JobOfferCard({ jobOffer }: JobOfferCardProps) {
       </div>
 
       <p className="job-offer-card__company">
-        {jobOffer.company?.companyName} · {jobOffer.company?.companyAddress}
+        {jobOffer.companyName ?? '—'}{jobOffer.location ? ` · ${jobOffer.location}` : ''}
       </p>
 
       <div className="job-offer-card__body">
