@@ -1,0 +1,18 @@
+# CODEOWNERS — CV Tracker (personal portfolio project)
+#
+# Single owner for all files.
+# Documentation: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for everything
+*                               @KacperKotecki
+
+# Agent pipeline files
+/.github/agents/**              @KacperKotecki
+/docs/agent-decisions.md        @KacperKotecki
+
+# CI/CD workflows
+/.github/workflows/**           @KacperKotecki
+
+# Application source
+/CvTracker.Api/**               @KacperKotecki
+/CvTracker.Client/**            @KacperKotecki
