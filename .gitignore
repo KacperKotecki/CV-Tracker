@@ -1,0 +1,50 @@
+# ── .NET ──────────────────────────────────────────────────────────────────────
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+.vs/
+publish/
+*.nupkg
+*.snupkg
+TestResults/
+
+# ── ASP.NET / EF Core ─────────────────────────────────────────────────────────
+# appsettings.Development.json is committed (only has SQLite path, no secrets)
+# API key lives in dotnet user-secrets — never in appsettings files
+
+# ── SQLite database ────────────────────────────────────────────────────────────
+*.db
+*.db-shm
+*.db-wal
+
+# ── Node / npm ────────────────────────────────────────────────────────────────
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.idea/
+*.iml
+
+# ── Pipeline run artifacts (local only, never committed) ──────────────────────
+.agent-run/
+
+# ── Agentic pipeline source (private — not for public repo) ───────────────────
+# Agents, prompts, scripts and pipeline docs stay local.
+# What IS in the repo: .github/workflows/, .github/skills/, .github/CODEOWNERS,
+#                      .github/pull_request_template.md, .github/copilot-instructions.md
+
+.github/agents/
+.github/prompts/
+.github/AGENTS.md
+scripts/
+docs/agent-decisions.md
+docs/code-review/
