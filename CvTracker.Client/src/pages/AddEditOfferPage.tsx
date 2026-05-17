@@ -11,7 +11,7 @@ import { applicationStatusOptions, type ApplicationStatus } from "../../models/A
 export default function AddEditOfferPage() {
   const { id } = useParams()
 
-  let emptyForm = {
+  const emptyForm = {
     position: '',
     salary: 0,
     contractType: '',
