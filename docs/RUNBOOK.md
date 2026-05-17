@@ -88,7 +88,29 @@ Swagger UI available at `http://localhost:5161/swagger` in Development.
 | `OpenRouter:ApiKey` | .NET user secrets | Required for `/api/scrape` |
 | `OpenRouter:Model` | `appsettings.json` or user secrets | LLM model identifier |
 
-## Troubleshooting
+## Agent pipeline — commit message approval
+
+When the agentic pipeline reaches the `pr-commit` phase, `scripts/pr-finalize.ps1` pauses before committing:
+
+1. It writes a proposed commit message to `.agent-run/<run-id>/commit-message.md`.
+2. The console prints `AWAITING_HUMAN: edit commit-message.md, then prepend APPROVE`.
+3. Open the file, edit the message if needed, then **prepend a line with exactly `APPROVE`**:
+
+```
+APPROVE
+feat(job): Add salary field to JobOffer
+
+Plan: ./.agent-run/.../plan.approved.md
+...
+```
+
+4. Save. The script detects the `APPROVE` line, strips it (and any `#` comment lines), then commits.
+
+**Timeout:** 10 minutes. If no `APPROVE` appears, the script exits with code 4. Re-run `pr-finalize.ps1` to restart from the commit step.
+
+The read-only reference (before your edits) is always at `commit-message.proposed.md` in the same run folder.
+
+
 
 | Symptom | Likely cause | Fix |
 |---------|-------------|-----|
