@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using CvTracker.Api.Services;
 
 namespace CvTracker.Api.Controllers;
 
@@ -7,30 +7,24 @@ namespace CvTracker.Api.Controllers;
 [Route("api/[controller]")]
 public class CompaniesController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly ICompanyService _service;
 
-    public CompaniesController(AppDbContext context)
+    public CompaniesController(ICompanyService service)
     {
-        _context = context;
+        _service = service;
     }
 
     [HttpGet]
     public async Task<ActionResult<ICollection<Company>>> GetAll()
     {
-        var companies = await _context.Companies.ToListAsync();
+        var companies = await _service.GetAllAsync();
         return Ok(companies);
     }
 
     [HttpPost]
     public async Task<ActionResult<Company>> Create([FromBody] CreateCompanyDto dto)
     {
-        var company = new Company
-        {
-            CompanyName = dto.CompanyName,
-            CompanyAddress = dto.CompanyAddress
-        };
-        _context.Companies.Add(company);
-        await _context.SaveChangesAsync();
+        var company = await _service.CreateAsync(dto);
         return CreatedAtAction(nameof(GetAll), new { id = company.Id }, company);
     }
 }
