@@ -1,0 +1,85 @@
+.offer-form {
+  padding: 24px 32px;
+
+  @media (max-width: 1024px) {
+    padding: 16px;
+  }
+}
+
+.offer-form__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.offer-form__title {
+  margin: 0;
+  font-size: 22px;
+  color: var(--accent);
+}
+
+.offer-form__header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.offer-form__cancel-btn {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+
+  &:hover {
+    background: var(--accent-bg);
+    opacity: 1;
+  }
+}
+
+.offer-form__scrape-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--code-bg);
+}
+
+.offer-form__url-input {
+  margin-bottom: 0;
+  flex: 1;
+  font-size: 14px;
+}
+
+.offer-form__fields {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.offer-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0 16px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.offer-form__col-full {
+  grid-column: 1 / -1;
+}
+
+.offer-form__label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}

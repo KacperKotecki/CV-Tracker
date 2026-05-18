@@ -1,0 +1,16 @@
+.offer-detail-panel {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.offer-detail-panel--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  font-size: 15px;
+
+  p {
+    margin: 0;
+  }
+}

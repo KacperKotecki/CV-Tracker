@@ -1,0 +1,68 @@
+.offer-list-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.offer-list-panel__header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.offer-list-panel__search {
+  margin-bottom: 0;
+  font-size: 14px;
+}
+
+.offer-list-panel__chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.offer-list-panel__chip {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text);
+  white-space: nowrap;
+  cursor: default;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover {
+    background: var(--accent-bg);
+    color: var(--accent);
+    border-color: var(--accent-border);
+  }
+}
+
+.offer-list-panel__add-btn {
+  margin-top: 0;
+  width: 100%;
+  font-size: 14px;
+}
+
+.offer-list-panel__list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.offer-list-panel__empty {
+  padding: 24px 16px;
+  color: var(--text);
+  font-size: 14px;
+  text-align: center;
+  margin: 0;
+}
