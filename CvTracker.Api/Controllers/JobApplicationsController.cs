@@ -61,4 +61,28 @@ public class JobApplicationsController : ControllerBase
         }
         return NoContent();
     }
+
+    [HttpGet("{id}/notes")]
+    public async Task<ActionResult<IEnumerable<JobOfferNote>>> GetNotes(int id)
+    {
+        var notes = await _service.GetNotesAsync(id);
+        if (notes == null) return NotFound();
+        return Ok(notes);
+    }
+
+    [HttpPost("{id}/notes")]
+    public async Task<ActionResult<JobOfferNote>> AddNote(int id, [FromBody] JobOfferNoteDto dto)
+    {
+        var note = await _service.AddNoteAsync(id, dto);
+        if (note == null) return NotFound();
+        return CreatedAtAction(nameof(GetNotes), new { id }, note);
+    }
+
+    [HttpDelete("{id}/notes/{noteId}")]
+    public async Task<ActionResult> DeleteNote(int id, int noteId)
+    {
+        var deleted = await _service.DeleteNoteAsync(id, noteId);
+        if (!deleted) return NotFound();
+        return NoContent();
+    }
 }

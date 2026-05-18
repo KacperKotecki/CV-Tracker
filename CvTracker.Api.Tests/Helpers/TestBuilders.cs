@@ -13,7 +13,6 @@ public static class TestBuilders
         {
             Id = id,
             Position = position,
-            Salary = 10_000m,
             ContractType = ContractType.B2B,
             WorkLoad = WorkLoad.FullTime,
             WorkMode = WorkMode.Remote,
@@ -28,11 +27,21 @@ public static class TestBuilders
         return new JobOfferDto
         {
             Position = position,
-            Salary = 10_000m,
             ContractType = ContractType.B2B,
             WorkLoad = WorkLoad.FullTime,
             WorkMode = WorkMode.Remote,
             Status = status
+        };
+    }
+
+    public static JobOfferNoteDto BuildJobOfferNoteDto(
+        string content = "Test note",
+        DateTimeOffset? eventDate = null)
+    {
+        return new JobOfferNoteDto
+        {
+            Content = content,
+            EventDate = eventDate ?? DateTimeOffset.UtcNow
         };
     }
 }

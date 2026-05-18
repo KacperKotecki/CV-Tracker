@@ -1,11 +1,11 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using CvTracker.Api.Models;
 
 public class JobOffer
 {
     public int Id { get; set; }
     public required string Position { get; set; }
-    public decimal Salary { get; set; }
 
     public ContractType ContractType { get; set; }  // UoP / B2B / ...
     public WorkLoad WorkLoad { get; set; }           // FullTime / PartTime
@@ -15,12 +15,21 @@ public class JobOffer
     public string? Location { get; set; }
 
     public string? Skills { get; set; }
-    public string? OurRequirements { get; set; }
-    public string? WhatWeOffer { get; set; }
-    public string? Benefits { get; set; }
 
     [Url]
     public string? SourceUrl { get; set; }
 
     public ApplicationStatus Status { get; set; }
+
+    public decimal? SalaryMin { get; set; }
+    public decimal? SalaryMax { get; set; }
+    public DateTimeOffset? AppliedAt { get; set; }
+    public DateTimeOffset? FollowUpDate { get; set; }
+    public string? RecruiterName { get; set; }
+    public string? RecruiterContact { get; set; }
+    public string? SentCvVersion { get; set; }
+    public string? RejectionReason { get; set; }
+
+    [JsonIgnore]
+    public ICollection<JobOfferNote> Notes { get; set; } = [];
 }

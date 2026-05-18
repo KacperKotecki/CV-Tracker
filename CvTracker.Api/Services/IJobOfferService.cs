@@ -9,4 +9,7 @@ public interface IJobOfferService
     Task<JobOffer> CreateAsync(JobOfferDto dto);
     Task<bool> UpdateAsync(int id, JobOfferDto dto);
     Task<bool> UpdateStatusAsync(int id, ApplicationStatus status);
+    Task<IEnumerable<JobOfferNote>?> GetNotesAsync(int offerId);
+    Task<JobOfferNote?> AddNoteAsync(int offerId, JobOfferNoteDto dto);
+    Task<bool> DeleteNoteAsync(int offerId, int noteId);
 }

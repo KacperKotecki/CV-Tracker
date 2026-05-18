@@ -20,7 +20,13 @@ public class AppDbContext : DbContext
             .Property(x => x.Status)
             .HasConversion<string>();
 
-        
+        modelBuilder.Entity<JobOfferNote>()
+            .HasOne<JobOffer>()
+            .WithMany(j => j.Notes)
+            .HasForeignKey(n => n.JobOfferId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
+
     public DbSet<JobOffer> JobOffers { get; set; }
+    public DbSet<JobOfferNote> JobOfferNotes { get; set; }
 }
