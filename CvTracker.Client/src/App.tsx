@@ -19,8 +19,8 @@ function Layout() {
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<OffersPage />} />
       <Route element={<Layout />}>
+        <Route path="/" element={<OffersPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
       </Route>
     </Routes>

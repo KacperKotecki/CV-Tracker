@@ -1,9 +1,7 @@
 .offers-page {
-  position: fixed;
-  inset: 0;
-  display: flex;
+  flex: 1;
   overflow: hidden;
-  background: var(--bg);
+  display: flex;
 }
 
 .offers-page__left {
