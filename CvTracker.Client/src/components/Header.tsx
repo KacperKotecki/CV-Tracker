@@ -11,9 +11,6 @@ export default function Header() {
         <NavLink to="/" end className="header__link">
           Oferty pracy
         </NavLink>
-        <NavLink to="/add" className="header__cta">
-          + Nowa oferta
-        </NavLink>
         <NavLink to="/dashboard" className={({ isActive }) => `header__link--outline${isActive ? ' active' : ''}`}>
           Dashboard
         </NavLink>

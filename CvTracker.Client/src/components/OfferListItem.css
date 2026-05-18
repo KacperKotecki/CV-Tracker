@@ -1,0 +1,74 @@
+.offer-list-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font: inherit;
+  color: var(--text-h);
+
+  &:hover {
+    background: var(--accent-bg);
+  }
+
+  &--selected {
+    background: var(--accent-bg);
+    border-left: 3px solid var(--accent);
+    padding-left: 13px;
+  }
+}
+
+.offer-list-item__row1 {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.offer-list-item__company {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-h);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.offer-list-item__date {
+  font-size: 12px;
+  color: var(--text);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.offer-list-item__position {
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.offer-list-item__row3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.offer-list-item__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.offer-list-item__salary {
+  font-size: 12px;
+  color: var(--text);
+}

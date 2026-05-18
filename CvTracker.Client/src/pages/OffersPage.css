@@ -1,0 +1,33 @@
+.offers-page {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+}
+
+.offers-page__left {
+  width: 32%;
+  min-width: 260px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.offers-page__right {
+  flex: 1;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .offers-page {
+    flex-direction: column;
+  }
+
+  .offers-page__left {
+    width: 100%;
+    min-width: unset;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    max-height: 40vh;
+  }
+}
