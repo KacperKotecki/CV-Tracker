@@ -9,33 +9,14 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CvTracker.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260503101408_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260518150243_AddSourceUrlToJobOffer")]
+    partial class AddSourceUrlToJobOffer
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.5");
-
-            modelBuilder.Entity("Company", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("CompanyAddress")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("CompanyName")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Companies");
-                });
 
             modelBuilder.Entity("JobOffer", b =>
                 {
@@ -46,11 +27,14 @@ namespace CvTracker.Api.Migrations
                     b.Property<string>("Benefits")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("CompanyName")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ContractType")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Location")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("OurRequirements")
@@ -66,8 +50,12 @@ namespace CvTracker.Api.Migrations
                     b.Property<string>("Skills")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("SourceUrl")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("WhatWeOffer")
                         .HasColumnType("TEXT");
@@ -82,20 +70,7 @@ namespace CvTracker.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
                     b.ToTable("JobOffers");
-                });
-
-            modelBuilder.Entity("JobOffer", b =>
-                {
-                    b.HasOne("Company", "Company")
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Company");
                 });
 #pragma warning restore 612, 618
         }

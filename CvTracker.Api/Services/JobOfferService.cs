@@ -15,16 +15,12 @@ public class JobOfferService : IJobOfferService
 
     public async Task<ICollection<JobOffer>> GetAllAsync()
     {
-        return await _context.JobOffers
-            .Include(j => j.Company)
-            .ToListAsync();
+        return await _context.JobOffers.ToListAsync();
     }
 
     public async Task<JobOffer?> GetByIdAsync(int id)
     {
-        return await _context.JobOffers
-            .Include(j => j.Company)
-            .FirstOrDefaultAsync(j => j.Id == id);
+        return await _context.JobOffers.FirstOrDefaultAsync(j => j.Id == id);
     }
 
     public async Task<JobOffer> CreateAsync(JobOfferDto dto)
@@ -36,11 +32,13 @@ public class JobOfferService : IJobOfferService
             ContractType = dto.ContractType,
             WorkLoad = dto.WorkLoad,
             WorkMode = dto.WorkMode,
-            CompanyId = dto.CompanyId,
+            CompanyName = dto.CompanyName,
+            Location = dto.Location,
             Skills = dto.Skills,
             OurRequirements = dto.OurRequirements,
             WhatWeOffer = dto.WhatWeOffer,
             Benefits = dto.Benefits,
+            SourceUrl = dto.SourceUrl,
             Status = dto.Status
         };
 
@@ -59,11 +57,13 @@ public class JobOfferService : IJobOfferService
         jobOffer.ContractType = dto.ContractType;
         jobOffer.WorkLoad = dto.WorkLoad;
         jobOffer.WorkMode = dto.WorkMode;
-        jobOffer.CompanyId = dto.CompanyId;
+        jobOffer.CompanyName = dto.CompanyName;
+        jobOffer.Location = dto.Location;
         jobOffer.Skills = dto.Skills;
         jobOffer.OurRequirements = dto.OurRequirements;
         jobOffer.WhatWeOffer = dto.WhatWeOffer;
         jobOffer.Benefits = dto.Benefits;
+        jobOffer.SourceUrl = dto.SourceUrl;
         jobOffer.Status = dto.Status;
 
         await _context.SaveChangesAsync();

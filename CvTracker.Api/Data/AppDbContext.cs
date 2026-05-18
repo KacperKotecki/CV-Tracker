@@ -22,6 +22,5 @@ public class AppDbContext : DbContext
 
         
     }
-    public DbSet<Company> Companies { get; set; }
     public DbSet<JobOffer> JobOffers { get; set; }
 }

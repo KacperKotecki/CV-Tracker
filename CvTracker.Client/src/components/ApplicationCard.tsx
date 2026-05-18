@@ -18,8 +18,10 @@ export default function ApplicationCard({ offer }: ApplicationCardProps) {
         onDragEnd={(e) => {
             e.currentTarget.classList.remove('dragging')
         }}>
-      <p className="status-card__position">{offer.position}</p>
-      <p className="status-card__company">{offer.company?.companyName}</p>
+      {offer.sourceUrl
+        ? <p className="status-card__position"><a href={offer.sourceUrl} target="_blank" rel="noopener noreferrer">{offer.position}</a></p>
+        : <p className="status-card__position">{offer.position}</p>}
+      <p className="status-card__company">{offer.companyName}</p>
       {offer.salary ? (
         <p className="status-card__salary">
           {offer.salary.toLocaleString('pl-PL')} PLN
