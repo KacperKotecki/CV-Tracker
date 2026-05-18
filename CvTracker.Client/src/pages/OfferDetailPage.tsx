@@ -27,18 +27,18 @@ export default function OfferDetailPage() {
 
   useEffect(() => {
     if (id) {
-      fetch(`http://localhost:5161/api/JobApplications/${id}`)
+      fetch(`/api/jobapplications/${id}`)
         .then(r => r.json())
         .then(setOffer)
 
-      fetch(`http://localhost:5161/api/JobApplications/${id}/notes`)
+      fetch(`/api/jobapplications/${id}/notes`)
         .then(r => r.json())
         .then(setNotes)
     }
   }, [id])
 
   const handleDeleteNote = async (noteId: number) => {
-    const r = await fetch(`http://localhost:5161/api/JobApplications/${id}/notes/${noteId}`, {
+    const r = await fetch(`/api/jobapplications/${id}/notes/${noteId}`, {
       method: 'DELETE'
     })
     if (r.ok) {
@@ -48,7 +48,7 @@ export default function OfferDetailPage() {
 
   const handleAddNote = async () => {
     if (!noteContent.trim()) return
-    const r = await fetch(`http://localhost:5161/api/JobApplications/${id}/notes`, {
+    const r = await fetch(`/api/jobapplications/${id}/notes`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ eventDate: noteDate, content: noteContent })
