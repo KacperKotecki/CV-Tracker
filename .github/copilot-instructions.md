@@ -1,73 +1,79 @@
 # CV Tracker — Copilot Instructions
 
-## Project Identity
-CV Tracker is a **portfolio/learning project** built by a single developer. It is a job application tracking app — users add and browse job offers. There is no authentication, no multi-tenancy, and no production deployment. Two independently runnable projects in one solution: `CvTracker.Api` (backend) and `CvTracker.Client` (frontend).
+Personal portfolio project: a Kanban-style job application tracker with AI-powered offer scraping.
 
-## Tech Stack
-- **Backend**: ASP.NET Core Web API (.NET 10), Entity Framework Core 10, SQLite, System.Text.Json (built-in — do NOT use Newtonsoft.Json)
-- **Frontend**: React 19, TypeScript, Vite 8
-- **No test projects yet** — xUnit planned when feature work stabilizes
+## Stack
 
-## Project Structure
+| Layer | Tech |
+|-------|------|
+| API | .NET 10, ASP.NET Core Web API, EF Core 10 (SQLite) |
+| Frontend | React 19, TypeScript, Vite, React Router v7 |
+| AI scraping | OpenRouter API (configurable model) |
 
-### Backend — `CvTracker.Api/`
-- `Controllers/` — API controllers
-- `Controllers/Models/` — EF Core entities and enums
-- `Controllers/Models/DTOs/` — planned, not yet implemented
-- `Controllers/Models/ViewModels/` — planned, not yet implemented
-- `Repositories/` — planned, not yet implemented
-- `Data/AppDbContext.cs` — EF Core DbContext (single file, all configuration here)
+## Project layout
 
-### Frontend — `CvTracker.Client/`
-- `models/` — TypeScript interfaces (mirror backend entities, camelCase)
-- `src/components/` — React functional components
-- `src/App.tsx` — root component
+```
+CvTracker.Api/
+├── Controllers/
+│   ├── JobApplicationsController.cs   # CRUD for job offers
+│   ├── ScrapeController.cs            # scrape + LLM-parse a URL into JobOfferDto
+│   └── Models/
+│       ├── JobOffer.cs                # EF Core entity
+│       ├── ApplicationStatus.cs      # enum → stored as string
+│       ├── ContractType.cs           # enum → stored as string
+│       ├── WorkLoad.cs               # enum → stored as string
+│       ├── WorkMode.cs               # enum → stored as string
+│       └── DTOs/
+│           ├── JobOfferDto.cs
+│           └── ScrapedOfferDto.cs
+├── Data/AppDbContext.cs               # single DbContext, direct access from controllers
+└── Migrations/                        # EF Core migrations
 
-## Architecture
-Current state: **flat/simple** — controllers depend directly on `AppDbContext`. No layers, no mediator, no CQRS.  
-Intended direction: introduce Repository layer, then DTOs. Do not jump ahead of this plan.
-
-## Backend Conventions
-- All controller actions must be `async Task<ActionResult<T>>`
-- Inject dependencies via constructor; currently `AppDbContext` directly (no interfaces yet — repositories planned)
-- Return `Ok()`, `NotFound()`, `CreatedAtAction()` — no custom response wrappers
-- Private fields: `_camelCase` (e.g. `_context`)
-- Use `var` where the type is obvious from the right-hand side; use explicit types otherwise
-- Do NOT expose EF entities directly in responses — introduce DTOs when adding new endpoints
-- Do NOT add migrations manually — always use `dotnet ef migrations add <Name>`
-- Enums stored as strings, `List<string>` properties stored as JSON — both configured in `AppDbContext.OnModelCreating`
-- Do NOT catch bare `Exception` without either rethrowing or logging it
-- Do NOT use `Thread.Sleep` — use `await Task.Delay` if a delay is needed
-
-## Frontend Conventions
-- All HTTP calls via native `fetch` — do NOT use axios or any HTTP library
-- TypeScript interfaces go in `models/` — one file per model, camelCase properties
-- Props must be typed via `interface` declared inside the component file
-- Do NOT use `any` type
-- Components: functional only, named or default exports are both acceptable
-- `useState` / `useEffect` for local state and data fetching — no external state library
-
-## Security Rules (apply to all code)
-- Never hardcode secrets, API keys, or connection strings in source files
-- Validate all user inputs at the API boundary (controller level)
-- Do NOT return stack traces, exception messages, or internal error details to the client
-- Use parameterized queries only — EF Core handles this; do NOT use raw SQL string interpolation
-- Do NOT log sensitive user data (passwords, personal identifiers)
-
-## Dev Commands
-```bash
-# Backend
-cd CvTracker.Api && dotnet run           # starts on http://localhost:5211
-dotnet ef migrations add <Name>
-dotnet ef database update
-
-# Frontend
-cd CvTracker.Client && npm run dev       # starts on http://localhost:5173
+CvTracker.Client/
+├── src/
+│   ├── components/                    # reusable UI components
+│   └── pages/                         # route-level pages (HomePage, Dashboard, OfferDetailPage, AddEditOfferPage)
+└── models/                            # TypeScript interfaces mirroring API models
 ```
 
-## Known Planned Work (do not implement unless asked)
-- DTOs for all endpoints
-- Repository pattern layer
-- React Router for navigation
-- Proper error handling and validation responses
-- Unit tests (xUnit)
+## Key conventions
+
+### Backend
+
+- **Controllers call `AppDbContext` directly** — no service layer, no repository layer.
+- **Enums stored as strings** in SQLite via `HasConversion<string>()` in `AppDbContext.OnModelCreating`. Always add `HasConversion<string>()` for new enum properties.
+- **JSON enum serialization**: `JsonStringEnumConverter` is registered globally in `Program.cs` — enums arrive as strings from the API.
+- **No authentication** — this is a single-user personal tool.
+- **CORS**: `AllowReact` policy allows `http://localhost:5173` (Vite dev server). New endpoints do not need CORS changes.
+- **DTOs** live under `Controllers/Models/DTOs/`. Entities live under `Controllers/Models/`.
+- **OpenRouter API key** must be stored in .NET user secrets (`dotnet user-secrets set "OpenRouter:ApiKey" "<value>"`), not in `appsettings.Development.json`.
+
+### Frontend
+
+- **TypeScript interfaces** in `models/` must mirror the C# models (enum values as string literals).
+- **React Router v7** — use `useNavigate` / `useParams` from `react-router-dom`.
+- No Redux or global state — local `useState` + `fetch` calls to `http://localhost:5161` (API dev port).
+
+## Build & run commands
+
+```bash
+# API (from repo root)
+dotnet build "CV Tracker.sln"
+dotnet run --project CvTracker.Api
+
+# Migrations
+dotnet ef migrations add <Name> --project CvTracker.Api
+dotnet ef database update --project CvTracker.Api
+
+# Frontend (from CvTracker.Client/)
+npm install
+npm run dev       # http://localhost:5173
+npm run build     # tsc + vite build
+npm run lint      # eslint
+```
+
+## Architecture docs
+
+- [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) — application architecture diagram and project structure
+- [docs/RUNBOOK.md](../docs/RUNBOOK.md) — operational runbook: local dev, commands, troubleshooting
+- [docs/agent-decisions.md](../docs/agent-decisions.md) — agentic pipeline decision log

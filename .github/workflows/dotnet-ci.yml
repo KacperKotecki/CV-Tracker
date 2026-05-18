@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  BUILD_CONFIGURATION: Release
+
+jobs:
+  build-api:
+    name: Build .NET API
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Restore dependencies
+        run: dotnet restore "CV Tracker.sln" --nologo
+
+      - name: Build solution
+        run: dotnet build "CV Tracker.sln" -c ${{ env.BUILD_CONFIGURATION }} --no-restore --nologo
+
+  build-client:
+    name: Build React Client
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: CvTracker.Client/package-lock.json
+
+      - name: Install dependencies
+        working-directory: CvTracker.Client
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: CvTracker.Client
+        run: npm run build
+
+      - name: Lint frontend
+        working-directory: CvTracker.Client
+        run: npm run lint
