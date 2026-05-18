@@ -32,8 +32,6 @@ export default function OffersPage() {
       fetch(`/api/jobapplications/${selectedId}/notes`)
         .then(r => r.json())
         .then(setNotes)
-    } else {
-      setNotes([])
     }
   }, [selectedId])
 
@@ -44,6 +42,7 @@ export default function OffersPage() {
 
   const handleAddOffer = () => {
     setSearchParams({})
+    setNotes([])
     setPanelMode('add')
   }
 
