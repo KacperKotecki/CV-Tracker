@@ -33,10 +33,8 @@ public class JobOfferServiceTests : IDisposable
     public async Task GetAllAsync_ReturnsAllJobOffers_WhenOffersExist()
     {
         // Arrange
-        var company = TestBuilders.BuildCompany();
-        _context.Companies.Add(company);
-        _context.JobOffers.Add(TestBuilders.BuildJobOffer(id: 1, companyId: company.Id));
-        _context.JobOffers.Add(TestBuilders.BuildJobOffer(id: 2, companyId: company.Id, position: "QA Engineer"));
+        _context.JobOffers.Add(TestBuilders.BuildJobOffer(id: 1));
+        _context.JobOffers.Add(TestBuilders.BuildJobOffer(id: 2, position: "QA Engineer"));
         await _context.SaveChangesAsync();
 
         // Act
@@ -44,7 +42,6 @@ public class JobOfferServiceTests : IDisposable
 
         // Assert
         result.Should().HaveCount(2);
-        result.Should().OnlyContain(o => o.Company != null);
     }
 
     [Fact]
@@ -63,9 +60,7 @@ public class JobOfferServiceTests : IDisposable
     public async Task GetByIdAsync_ReturnsJobOffer_WhenFound()
     {
         // Arrange
-        var company = TestBuilders.BuildCompany();
-        _context.Companies.Add(company);
-        var offer = TestBuilders.BuildJobOffer(id: 1, companyId: company.Id);
+        var offer = TestBuilders.BuildJobOffer(id: 1);
         _context.JobOffers.Add(offer);
         await _context.SaveChangesAsync();
 
@@ -75,7 +70,6 @@ public class JobOfferServiceTests : IDisposable
         // Assert
         result.Should().NotBeNull();
         result!.Id.Should().Be(1);
-        result.Company.Should().NotBeNull();
     }
 
     [Fact]
@@ -94,11 +88,7 @@ public class JobOfferServiceTests : IDisposable
     public async Task CreateAsync_CreatesAndReturnsJobOffer()
     {
         // Arrange
-        var company = TestBuilders.BuildCompany();
-        _context.Companies.Add(company);
-        await _context.SaveChangesAsync();
-
-        var dto = TestBuilders.BuildJobOfferDto(companyId: company.Id);
+        var dto = TestBuilders.BuildJobOfferDto();
 
         // Act
         var result = await _sut.CreateAsync(dto);
@@ -107,7 +97,6 @@ public class JobOfferServiceTests : IDisposable
         result.Should().NotBeNull();
         result.Id.Should().BeGreaterThan(0);
         result.Position.Should().Be(dto.Position);
-        result.CompanyId.Should().Be(company.Id);
 
         var stored = await _context.JobOffers.FindAsync(result.Id);
         stored.Should().NotBeNull();
@@ -119,12 +108,10 @@ public class JobOfferServiceTests : IDisposable
     public async Task UpdateAsync_UpdatesJobOffer_AndReturnsTrue_WhenFound()
     {
         // Arrange
-        var company = TestBuilders.BuildCompany();
-        _context.Companies.Add(company);
-        _context.JobOffers.Add(TestBuilders.BuildJobOffer(id: 1, companyId: company.Id));
+        _context.JobOffers.Add(TestBuilders.BuildJobOffer(id: 1));
         await _context.SaveChangesAsync();
 
-        var dto = TestBuilders.BuildJobOfferDto(companyId: company.Id, position: "Senior Engineer");
+        var dto = TestBuilders.BuildJobOfferDto(position: "Senior Engineer");
 
         // Act
         var result = await _sut.UpdateAsync(1, dto);
@@ -155,11 +142,8 @@ public class JobOfferServiceTests : IDisposable
     public async Task UpdateStatusAsync_UpdatesStatus_AndReturnsTrue_WhenFound()
     {
         // Arrange
-        var company = TestBuilders.BuildCompany();
-        _context.Companies.Add(company);
         _context.JobOffers.Add(TestBuilders.BuildJobOffer(
             id: 1,
-            companyId: company.Id,
             status: ApplicationStatus.Draft));
         await _context.SaveChangesAsync();
 

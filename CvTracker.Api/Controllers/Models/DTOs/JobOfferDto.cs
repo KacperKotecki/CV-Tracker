@@ -17,5 +17,8 @@ public class JobOfferDto
     public string? WhatWeOffer { get; set; }
     public string? Benefits { get; set; }
 
+    [Url]
+    public string? SourceUrl { get; set; }
+
     public ApplicationStatus Status { get; set; }
 }

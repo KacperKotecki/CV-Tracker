@@ -30,6 +30,7 @@ export default function AddEditOfferPage() {
     workLoad: '',
     companyName: '',
     location: '',
+    sourceUrl: '',
     skills: '',
     ourRequirements: '',
     whatWeOffer: '',
@@ -70,6 +71,7 @@ export default function AddEditOfferPage() {
         ourRequirements: data.ourRequirements ?? prev.ourRequirements,
         whatWeOffer:     data.whatWeOffer     ?? prev.whatWeOffer,
         benefits:        data.benefits        ?? prev.benefits,
+        sourceUrl:       offerUrl,
       }))
     } catch {
       window.alert('Błąd połączenia z serwerem.')
@@ -108,6 +110,7 @@ const addEditJobOffer = async () => {
           workLoad: form.workLoad,
           companyName: form.companyName || null,
           location: form.location || null,
+          sourceUrl: form.sourceUrl || null,
           skills: form.skills,
           ourRequirements: form.ourRequirements,
           whatWeOffer: form.whatWeOffer,
@@ -180,6 +183,7 @@ const addEditJobOffer = async () => {
       </select>
       <input className="form-field" type="text" value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })} placeholder="Nazwa firmy" />
       <input className="form-field" type="text" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Lokalizacja (np. Warszawa, Zdalnie)" />
+      <input className="form-field" type="url" value={form.sourceUrl ?? ''} onChange={(e) => setForm({ ...form, sourceUrl: e.target.value })} placeholder="Source URL (np. https://...)" />
       <textarea className="form-field" rows={2} value={form.skills ?? ''} onChange={(e) => setForm({ ...form, skills: e.target.value })} placeholder="Umiejętności" />
       <textarea className="form-field" rows={3} value={form.ourRequirements ?? ''} onChange={(e) => setForm({ ...form, ourRequirements: e.target.value })} placeholder="Nasze wymagania" />
       <textarea className="form-field" rows={3} value={form.whatWeOffer ?? ''} onChange={(e) => setForm({ ...form, whatWeOffer: e.target.value })} placeholder="Co oferujemy" />

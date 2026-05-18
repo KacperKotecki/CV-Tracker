@@ -47,7 +47,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IJobOfferService, JobOfferService>();
-builder.Services.AddScoped<ICompanyService, CompanyService>();
 
 var app = builder.Build();
 

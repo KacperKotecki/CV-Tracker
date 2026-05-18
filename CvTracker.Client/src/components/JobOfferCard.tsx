@@ -19,7 +19,9 @@ export default function JobOfferCard({ jobOffer }: JobOfferCardProps) {
   return (
     <div className="job-offer-card">
       <div className="job-offer-card__header">
-        <h2>{jobOffer.position}</h2>
+        {jobOffer.sourceUrl
+          ? <h2><a href={jobOffer.sourceUrl} target="_blank" rel="noopener noreferrer">{jobOffer.position}</a></h2>
+          : <h2>{jobOffer.position}</h2>}
         <span className="job-offer-card__salary">{jobOffer.salary} PLN</span>
       </div>
 

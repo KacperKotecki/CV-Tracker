@@ -13,6 +13,7 @@ export interface JobOffer {
   ourRequirements: string | null
   whatWeOffer: string | null
   benefits: string | null
+  sourceUrl?: string | null
   status: ApplicationStatus
 }
 
