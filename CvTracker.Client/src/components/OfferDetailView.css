@@ -48,10 +48,9 @@
 
 .offer-detail-view__source-btn {
   display: inline-flex;
+  align-items: center;
   text-decoration: none;
-  font-size: 14px;
-  padding: 6px 14px;
-  margin-top: 0;
+  padding: 0 14px;
   background: transparent;
   color: var(--accent);
   border: 1px solid var(--accent-border);
@@ -64,8 +63,6 @@
 
 .offer-detail-view__status-select {
   margin-bottom: 0;
-  font-size: 13px;
-  padding: 6px 10px;
   width: auto;
 }
 

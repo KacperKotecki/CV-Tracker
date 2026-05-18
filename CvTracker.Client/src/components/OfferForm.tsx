@@ -150,7 +150,7 @@ export default function OfferForm({ offer, onSave, onCancel }: Props) {
           <button className="btn" onClick={handleSave} disabled={isScraping}>
             Zapisz
           </button>
-          <button className="btn offer-form__cancel-btn" onClick={onCancel} disabled={isScraping}>
+          <button className="btn-secondary" onClick={onCancel} disabled={isScraping}>
             Anuluj
           </button>
         </div>

@@ -58,7 +58,7 @@ export default function NotesTimeline({ notes, onAdd, onDelete }: Props) {
             <div className="notes-timeline__body">
               <span className="notes-timeline__date">{formatDate(note.eventDate)}</span>
               <p className="notes-timeline__content">{note.content}</p>
-              <button className="btn notes-timeline__delete-btn" onClick={() => onDelete(note.id)}>
+              <button className="btn-secondary notes-timeline__delete-btn" onClick={() => onDelete(note.id)}>
                 Usuń
               </button>
             </div>

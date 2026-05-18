@@ -22,13 +22,10 @@
 
 .notes-timeline__date-input {
   margin-bottom: 0;
-  font-size: 13px;
 }
 
 .notes-timeline__textarea {
   margin-bottom: 0;
-  font-size: 14px;
-  resize: vertical;
 }
 
 .notes-timeline__list {
@@ -93,13 +90,6 @@
 }
 
 .notes-timeline__delete-btn {
-  font-size: 12px;
-  padding: 4px 10px;
-  margin-top: 0;
-  background: transparent;
-  color: var(--text);
-  border: 1px solid var(--border);
-
   &:hover {
     background: #ef444420;
     color: #ef4444;

@@ -26,21 +26,11 @@
   gap: 8px;
 }
 
-.offer-form__cancel-btn {
-  background: transparent;
-  color: var(--text);
-  border: 1px solid var(--border);
-
-  &:hover {
-    background: var(--accent-bg);
-    opacity: 1;
-  }
-}
 
 .offer-form__scrape-row {
   display: flex;
   gap: 8px;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 20px;
   padding: 16px;
   border: 1px solid var(--border);
@@ -51,7 +41,6 @@
 .offer-form__url-input {
   margin-bottom: 0;
   flex: 1;
-  font-size: 14px;
 }
 
 .offer-form__fields {
