@@ -1,4 +1,5 @@
 import type { ApplicationStatus } from './ApplicationStatus'
+import type { JobOfferNote } from './JobOfferNote'
 
 export interface JobOffer {
   id: number
@@ -19,5 +20,6 @@ export interface JobOffer {
   recruiterContact: string | null
   sentCvVersion: string | null
   rejectionReason: string | null
+  notes: JobOfferNote[]
 }
 

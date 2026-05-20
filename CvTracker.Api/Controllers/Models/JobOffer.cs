@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
 using CvTracker.Api.Models;
 
 public class JobOffer
@@ -30,6 +29,5 @@ public class JobOffer
     public string? SentCvVersion { get; set; }
     public string? RejectionReason { get; set; }
 
-    [JsonIgnore]
     public ICollection<JobOfferNote> Notes { get; set; } = [];
 }

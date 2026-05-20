@@ -11,7 +11,6 @@ type PanelMode = 'empty' | 'detail' | 'edit' | 'add'
 
 export default function OffersPage() {
   const [offers, setOffers] = useState<JobOffer[]>([])
-  const [notes, setNotes] = useState<JobOfferNote[]>([])
   const [search, setSearch] = useState('')
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -27,14 +26,6 @@ export default function OffersPage() {
       .then(setOffers)
   }, [])
 
-  useEffect(() => {
-    if (selectedId != null) {
-      fetch(`/api/jobapplications/${selectedId}/notes`)
-        .then(r => r.json())
-        .then(setNotes)
-    }
-  }, [selectedId])
-
   const handleSelectOffer = (id: number) => {
     setSearchParams({ id: String(id) })
     setPanelMode('detail')
@@ -42,7 +33,6 @@ export default function OffersPage() {
 
   const handleAddOffer = () => {
     setSearchParams({})
-    setNotes([])
     setPanelMode('add')
   }
 
@@ -64,7 +54,7 @@ export default function OffersPage() {
         return
       }
       setOffers(prev =>
-        prev.map(o => o.id === dto.id ? { ...o, ...dto } as JobOffer : o)
+        prev.map(o => o.id === dto.id ? { ...o, ...dto, notes: o.notes } as JobOffer : o)
       )
       setPanelMode('detail')
     } else {
@@ -83,10 +73,6 @@ export default function OffersPage() {
       setOffers(prev => [created, ...prev])
       setSearchParams({ id: String(created.id) })
       setPanelMode('detail')
-      const notesR = await fetch(`/api/jobapplications/${created.id}/notes`)
-      if (notesR.ok) {
-        setNotes(await notesR.json())
-      }
     }
   }
 
@@ -118,7 +104,11 @@ export default function OffersPage() {
     })
     if (r.ok) {
       const created: JobOfferNote = await r.json()
-      setNotes(prev => [created, ...prev])
+      setOffers(prev => prev.map(o =>
+        o.id === selectedId
+          ? { ...o, notes: [created, ...o.notes] }
+          : o
+      ))
     }
   }
 
@@ -128,7 +118,11 @@ export default function OffersPage() {
       method: 'DELETE',
     })
     if (r.ok) {
-      setNotes(prev => prev.filter(n => n.id !== noteId))
+      setOffers(prev => prev.map(o =>
+        o.id === selectedId
+          ? { ...o, notes: o.notes.filter(n => n.id !== noteId) }
+          : o
+      ))
     }
   }
 
@@ -156,7 +150,7 @@ export default function OffersPage() {
         <OfferDetailPanel
           mode={panelMode}
           offer={selectedOffer}
-          notes={notes}
+          notes={selectedOffer?.notes ?? []}
           onEdit={handleEditOffer}
           onSave={handleSaveOffer}
           onCancel={handleCancelEdit}
