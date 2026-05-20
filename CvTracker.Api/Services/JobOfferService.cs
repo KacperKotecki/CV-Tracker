@@ -15,12 +15,16 @@ public class JobOfferService : IJobOfferService
 
     public async Task<ICollection<JobOffer>> GetAllAsync()
     {
-        return await _context.JobOffers.ToListAsync();
+        return await _context.JobOffers
+            .Include(j => j.Notes)
+            .ToListAsync();
     }
 
     public async Task<JobOffer?> GetByIdAsync(int id)
     {
-        return await _context.JobOffers.FirstOrDefaultAsync(j => j.Id == id);
+        return await _context.JobOffers
+            .Include(j => j.Notes)
+            .FirstOrDefaultAsync(j => j.Id == id);
     }
 
     public async Task<JobOffer> CreateAsync(JobOfferDto dto)
