@@ -14,6 +14,9 @@ export default function Header() {
         <NavLink to="/dashboard" className={({ isActive }) => `header__link--outline${isActive ? ' active' : ''}`}>
           Dashboard
         </NavLink>
+        <NavLink to="/profile" className={({ isActive }) => `header__link--outline${isActive ? ' active' : ''}`}>
+          Profil
+        </NavLink>
       </nav>
     </header>
   )

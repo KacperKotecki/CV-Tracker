@@ -48,3 +48,8 @@ Thumbs.db
 scripts/
 docs/agent-decisions.md
 docs/code-review/
+
+
+CvTracker.Api/wwwroot/uploads/avatars/*
+CvTracker.Api/wwwroot/uploads/resumes/*
+

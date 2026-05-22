@@ -1,0 +1,249 @@
+.profile-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+
+.profile-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.profile-card__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.profile-card__edit-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text);
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+
+  &:hover {
+    color: var(--accent);
+  }
+}
+
+.profile-card__done-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--accent);
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 0.75;
+  }
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.profile-info__top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-info__photo {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.profile-info__photo--placeholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--code-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.profile-info__details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-info__name {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.profile-info__location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.profile-info__links {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.profile-info__link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--accent);
+  text-decoration: none;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 0.75;
+  }
+}
+
+.profile-info__resume {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.profile-info__resume--empty {
+  opacity: 0.5;
+}
+
+.profile-info__resume-link {
+  color: var(--accent);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.profile-info__form {
+  display: grid;
+  gap: 16px;
+}
+
+.profile-info__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.profile-info__row--full {
+  grid-template-columns: 1fr;
+}
+
+.profile-info__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.profile-info__label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.profile-info__input {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 14px;
+  font-family: var(--sans);
+  outline: none;
+  transition: border-color 0.15s;
+
+  &:focus {
+    border-color: var(--accent);
+  }
+}
+
+.profile-info__input--file {
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.profile-info__uploading {
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: 4px;
+}
+
+.profile-info__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.profile-info__btn {
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: opacity 0.15s;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.profile-info__btn--save {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+
+  &:hover:not(:disabled) {
+    opacity: 0.85;
+  }
+}
+
+.profile-info__btn--cancel {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+
+  &:hover:not(:disabled) {
+    border-color: var(--accent-border);
+    color: var(--text-h);
+  }
+}

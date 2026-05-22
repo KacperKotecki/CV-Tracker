@@ -58,7 +58,14 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowReact");
+app.UseStaticFiles();
 app.UseAuthorization();
+
+// Ensure upload directories exist
+var wwwroot = app.Environment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+Directory.CreateDirectory(Path.Combine(wwwroot, "uploads", "avatars"));
+Directory.CreateDirectory(Path.Combine(wwwroot, "uploads", "resumes"));
+
 app.MapControllers();
 
 app.Run();
