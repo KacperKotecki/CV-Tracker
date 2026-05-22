@@ -29,4 +29,6 @@ public class AppDbContext : DbContext
 
     public DbSet<JobOffer> JobOffers { get; set; }
     public DbSet<JobOfferNote> JobOfferNotes { get; set; }
+    public DbSet<UserProfile> UserProfiles { get; set; }
+    public DbSet<UserSkill> UserSkills { get; set; }
 }

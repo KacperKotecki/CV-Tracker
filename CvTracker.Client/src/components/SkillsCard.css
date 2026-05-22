@@ -1,0 +1,150 @@
+.skills-card__empty {
+  text-align: center;
+  color: var(--text);
+  opacity: 0.6;
+  padding: 24px 0;
+  font-size: 14px;
+}
+
+.skills-card__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.skills-card__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 13px;
+}
+
+.skills-card__pill-name {
+  color: var(--text-h);
+  font-weight: 500;
+}
+
+.skills-card__dots {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.skills-card__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.skills-card__dot--filled {
+  background: var(--accent);
+}
+
+.skills-card__editor {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.skills-card__category {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.skills-card__category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-h);
+  font-size: 14px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-family: var(--sans);
+  transition: color 0.15s;
+
+  &:hover {
+    color: var(--accent);
+  }
+}
+
+.skills-card__category-count {
+  font-weight: 400;
+  color: var(--accent);
+}
+
+.skills-card__chevron {
+  font-style: normal;
+  font-size: 12px;
+  transition: transform 0.15s;
+  display: inline-block;
+}
+
+.skills-card__chevron--open {
+  transform: rotate(90deg);
+}
+
+.skills-card__category-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 0;
+}
+
+.skills-card__skill-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-family: var(--sans);
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
+
+  &:hover {
+    background: var(--accent-bg);
+    color: var(--text-h);
+  }
+}
+
+.skills-card__skill-row--active {
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+  color: var(--text-h);
+}
+
+.skills-card__skill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: opacity 0.1s;
+
+  &:hover {
+    opacity: 0.7;
+  }
+}
+
+.skills-card__skill-dot--filled {
+  background: var(--accent);
+}
