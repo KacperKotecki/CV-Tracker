@@ -40,7 +40,7 @@ CvTracker.Client/
 
 ### Backend
 
-- **Controllers call `AppDbContext` directly** — no service layer, no repository layer.
+- **Controllers inject services** (`IJobOfferService` etc.) — services call `AppDbContext` directly. No repository layer.
 - **Enums stored as strings** in SQLite via `HasConversion<string>()` in `AppDbContext.OnModelCreating`. Always add `HasConversion<string>()` for new enum properties.
 - **JSON enum serialization**: `JsonStringEnumConverter` is registered globally in `Program.cs` — enums arrive as strings from the API.
 - **No authentication** — this is a single-user personal tool.

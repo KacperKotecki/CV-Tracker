@@ -4,7 +4,9 @@ import { applicationStatusOptions, type ApplicationStatus } from '../../models/A
 import { contractTypeOptions } from '../../models/ContractType'
 import { workModeOptions } from '../../models/WorkMode'
 import { workLoadOptions } from '../../models/WorkLoad'
+import OfferSkillPicker from './OfferSkillPicker'
 import './OfferForm.css'
+import './OfferSkillPicker.css'
 
 interface ScrapedOffer {
   position: string | null
@@ -13,7 +15,7 @@ interface ScrapedOffer {
   contractType: string | null
   workMode: string | null
   workLoad: string | null
-  skills: string | null
+  requiredSkills: string[]
   companyName: string | null
   location: string | null
 }
@@ -39,7 +41,7 @@ const emptyForm = {
   companyName: '',
   location: '',
   sourceUrl: '',
-  skills: '',
+  requiredSkills: [] as string[],
   appliedAt: '',
   followUpDate: '',
   recruiterName: '',
@@ -66,7 +68,7 @@ export default function OfferForm({ offer, onSave, onCancel }: Props) {
         companyName:      offer.companyName       ?? '',
         location:         offer.location          ?? '',
         sourceUrl:        offer.sourceUrl         ?? '',
-        skills:           offer.skills            ?? '',
+        requiredSkills:   offer.requiredSkills     ?? [],
         appliedAt:        toDateTimeLocal(offer.appliedAt),
         followUpDate:     toDateTimeLocal(offer.followUpDate),
         recruiterName:    offer.recruiterName     ?? '',
@@ -105,7 +107,7 @@ export default function OfferForm({ offer, onSave, onCancel }: Props) {
         workLoad:     data.workLoad     ?? prev.workLoad,
         companyName:  data.companyName  ?? prev.companyName,
         location:     data.location     ?? prev.location,
-        skills:       data.skills       ?? prev.skills,
+        requiredSkills: data.requiredSkills?.length ? data.requiredSkills : prev.requiredSkills,
         sourceUrl:    offerUrl,
       }))
     } catch {
@@ -131,7 +133,7 @@ export default function OfferForm({ offer, onSave, onCancel }: Props) {
       companyName:      form.companyName      || null,
       location:         form.location         || null,
       sourceUrl:        form.sourceUrl        || null,
-      skills:           form.skills           || null,
+      requiredSkills:   form.requiredSkills,
       appliedAt:        form.appliedAt        || null,
       followUpDate:     form.followUpDate     || null,
       recruiterName:    form.recruiterName    || null,
@@ -196,7 +198,7 @@ export default function OfferForm({ offer, onSave, onCancel }: Props) {
           <input className="form-field" type="text" value={form.recruiterName} onChange={e => setForm({ ...form, recruiterName: e.target.value })} placeholder="Imię rekrutera" />
           <input className="form-field" type="text" value={form.recruiterContact} onChange={e => setForm({ ...form, recruiterContact: e.target.value })} placeholder="Kontakt do rekrutera" />
           <div className="offer-form__col-full">
-            <textarea className="form-field" rows={2} value={form.skills} onChange={e => setForm({ ...form, skills: e.target.value })} placeholder="Umiejętności (oddzielone przecinkami)" />
+            <OfferSkillPicker value={form.requiredSkills} onChange={v => setForm({ ...form, requiredSkills: v })} />
           </div>
           <div className="offer-form__col-full">
             <label className="offer-form__label">Data aplikacji</label>

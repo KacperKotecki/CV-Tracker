@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using CvTracker.Api.Models;
 
 public class JobOffer
@@ -13,7 +14,8 @@ public class JobOffer
     public string? CompanyName { get; set; }
     public string? Location { get; set; }
 
-    public string? Skills { get; set; }
+    public List<string> RequiredSkills { get; set; } = [];
+    [NotMapped] public int? MatchScore { get; set; }
 
     [Url]
     public string? SourceUrl { get; set; }

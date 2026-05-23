@@ -21,9 +21,7 @@ function formatDate(value: string | null): string {
 
 export default function OfferDetailView({ offer, notes, onEdit, onStatusChange, onAddNote, onDeleteNote }: Props) {
   const salary = salaryRange(offer)
-  const skills = offer.skills
-    ? offer.skills.split(',').map(s => s.trim()).filter(Boolean)
-    : []
+  const skills = offer.requiredSkills ?? []
 
   return (
     <div className="offer-detail-view">

@@ -10,7 +10,7 @@ public class JobOfferDto
 
     public string? CompanyName { get; set; }
     public string? Location { get; set; }
-    public string? Skills { get; set; }
+    public List<string> RequiredSkills { get; set; } = [];
 
     [Url]
     public string? SourceUrl { get; set; }

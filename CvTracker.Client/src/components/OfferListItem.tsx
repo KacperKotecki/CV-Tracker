@@ -1,5 +1,6 @@
 import type { JobOffer } from '../../models/JobOffer'
 import { salaryRange, formatRelativeDate, statusColor } from '../utils/offerUtils'
+import MatchScoreBadge from './MatchScoreBadge'
 import './OfferListItem.css'
 
 interface Props {
@@ -27,6 +28,7 @@ export default function OfferListItem({ offer, isSelected, onClick }: Props) {
           style={{ background: statusColor(offer.status) }}
         />
         <span className="offer-list-item__salary">{salary}</span>
+        <MatchScoreBadge score={offer.matchScore} />
       </div>
     </button>
   )

@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import type { JobOffer } from "../../models/JobOffer";
+import MatchScoreBadge from './MatchScoreBadge';
 import './StatusCard.css';
 
 interface ApplicationCardProps {
@@ -45,6 +46,7 @@ export default function ApplicationCard({ offer }: ApplicationCardProps) {
         {offer.contractType && <span className="tag">{offer.contractType}</span>}
         {offer.workMode && <span className="tag">{offer.workMode}</span>}
       </div>
+      <MatchScoreBadge score={offer.matchScore} />
     </div>
   );
 }
