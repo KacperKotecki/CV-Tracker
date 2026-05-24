@@ -53,6 +53,7 @@ export default function ProfilePage() {
 
   const buildSkillsRequest = (updatedSkills: UserSkill[]): UpdateUserSkillsRequest => ({
     skills: updatedSkills.map(s => ({
+      skillId: s.skillId,
       category: s.category,
       skillName: s.skillName,
       proficiency: s.proficiency,
@@ -64,7 +65,7 @@ export default function ProfilePage() {
     const exists = profile.skills.find(s => s.category === category && s.skillName === skillName)
     const updatedSkills: UserSkill[] = exists
       ? profile.skills.filter(s => !(s.category === category && s.skillName === skillName))
-      : [...profile.skills, { id: 0, category, skillName, proficiency: 3 }]
+      : [...profile.skills, { id: 0, skillId: 0, category, skillName, proficiency: 3 }]
 
     setProfile(prev => prev ? { ...prev, skills: updatedSkills } : prev)
 

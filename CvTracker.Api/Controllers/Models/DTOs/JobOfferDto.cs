@@ -1,5 +1,10 @@
 using CvTracker.Api.Models;
 using System.ComponentModel.DataAnnotations;
+
+/// <summary>
+/// DTO for creating or updating a job offer.
+/// <c>RequiredSkills</c> uses <see cref="SkillRefDto"/> with <c>Id = 0</c> for find-or-create by name.
+/// </summary>
 public class JobOfferDto
 {
     [Required]
@@ -10,7 +15,9 @@ public class JobOfferDto
 
     public string? CompanyName { get; set; }
     public string? Location { get; set; }
-    public List<string> RequiredSkills { get; set; } = [];
+
+    /// <summary>Required skills. Use <c>Id = 0</c> to trigger find-or-create by name on the server.</summary>
+    public List<SkillRefDto> RequiredSkills { get; set; } = [];
 
     [Url]
     public string? SourceUrl { get; set; }

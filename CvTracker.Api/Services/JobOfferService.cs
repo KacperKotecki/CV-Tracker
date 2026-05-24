@@ -14,99 +14,137 @@ public class JobOfferService : IJobOfferService
         _context = context;
     }
 
+    /// <inheritdoc />
     public async Task<ICollection<JobOffer>> GetAllAsync()
     {
-        var offers = await _context.JobOffers
+        // Load offers with all navigation properties required to populate RequiredSkills.
+        return await _context.JobOffers
             .Include(j => j.Notes)
+            .Include(j => j.JobOfferSkills)
+                .ThenInclude(jos => jos.Skill)
             .ToListAsync();
-        foreach (var o in offers)
-            o.MatchScore = await ComputeMatchScoreAsync(o.RequiredSkills);
-        return offers;
     }
 
+    /// <inheritdoc />
     public async Task<JobOffer?> GetByIdAsync(int id)
     {
-        var jobOffer = await _context.JobOffers
+        return await _context.JobOffers
             .Include(j => j.Notes)
+            .Include(j => j.JobOfferSkills)
+                .ThenInclude(jos => jos.Skill)
             .FirstOrDefaultAsync(j => j.Id == id);
-        if (jobOffer != null)
-            jobOffer.MatchScore = await ComputeMatchScoreAsync(jobOffer.RequiredSkills);
-        return jobOffer;
     }
 
+    /// <inheritdoc />
     public async Task<JobOffer> CreateAsync(JobOfferDto dto)
     {
         var followUpDate = dto.FollowUpDate;
-        if (followUpDate == null && dto.AppliedAt != null)
+        if (followUpDate is null && dto.AppliedAt is not null)
             followUpDate = dto.AppliedAt.Value.AddDays(14);
 
         var jobOffer = new JobOffer
         {
-            Position = dto.Position,
-            ContractType = dto.ContractType,
-            WorkLoad = dto.WorkLoad,
-            WorkMode = dto.WorkMode,
-            CompanyName = dto.CompanyName,
-            Location = dto.Location,
-            RequiredSkills = dto.RequiredSkills,
-            SourceUrl = dto.SourceUrl,
-            Status = dto.Status,
-            SalaryMin = dto.SalaryMin,
-            SalaryMax = dto.SalaryMax,
-            AppliedAt = dto.AppliedAt,
-            FollowUpDate = followUpDate,
-            RecruiterName = dto.RecruiterName,
+            Position        = dto.Position,
+            ContractType    = dto.ContractType,
+            WorkLoad        = dto.WorkLoad,
+            WorkMode        = dto.WorkMode,
+            CompanyName     = dto.CompanyName,
+            Location        = dto.Location,
+            SourceUrl       = dto.SourceUrl,
+            Status          = dto.Status,
+            SalaryMin       = dto.SalaryMin,
+            SalaryMax       = dto.SalaryMax,
+            AppliedAt       = dto.AppliedAt,
+            FollowUpDate    = followUpDate,
+            RecruiterName   = dto.RecruiterName,
             RecruiterContact = dto.RecruiterContact,
-            SentCvVersion = dto.SentCvVersion,
-            RejectionReason = dto.RejectionReason
+            SentCvVersion   = dto.SentCvVersion,
+            RejectionReason = dto.RejectionReason,
         };
+
+        // Resolve each requested skill to a canonical Skill row (find-or-create).
+        foreach (var skillRef in dto.RequiredSkills)
+        {
+            var skill = await FindOrCreateSkillAsync(skillRef.Id, skillRef.Name, null);
+            jobOffer.JobOfferSkills.Add(new JobOfferSkill { SkillId = skill.Id, Skill = skill });
+        }
+
+        // Compute and persist MatchScore before the first save.
+        var userSkills = await _context.UserSkills.Where(s => s.UserId == 1).ToListAsync();
+        jobOffer.MatchScore = ComputeMatchScore(jobOffer.JobOfferSkills, userSkills);
 
         _context.JobOffers.Add(jobOffer);
         await _context.SaveChangesAsync();
-        return jobOffer;
+
+        // Reload with full navigation so RequiredSkills computed property has correct names.
+        return await _context.JobOffers
+            .Include(j => j.Notes)
+            .Include(j => j.JobOfferSkills)
+                .ThenInclude(jos => jos.Skill)
+            .FirstAsync(j => j.Id == jobOffer.Id);
     }
 
+    /// <inheritdoc />
     public async Task<bool> UpdateAsync(int id, JobOfferDto dto)
     {
-        var jobOffer = await GetByIdAsync(id);
-        if (jobOffer == null) return false;
+        var jobOffer = await _context.JobOffers
+            .Include(j => j.Notes)
+            .Include(j => j.JobOfferSkills)
+            .FirstOrDefaultAsync(j => j.Id == id);
+
+        if (jobOffer is null) return false;
 
         var followUpDate = dto.FollowUpDate;
-        if (followUpDate == null && dto.AppliedAt != null)
+        if (followUpDate is null && dto.AppliedAt is not null)
             followUpDate = dto.AppliedAt.Value.AddDays(14);
 
-        jobOffer.Position = dto.Position;
-        jobOffer.ContractType = dto.ContractType;
-        jobOffer.WorkLoad = dto.WorkLoad;
-        jobOffer.WorkMode = dto.WorkMode;
-        jobOffer.CompanyName = dto.CompanyName;
-        jobOffer.Location = dto.Location;
-        jobOffer.RequiredSkills = dto.RequiredSkills;
-        jobOffer.SourceUrl = dto.SourceUrl;
-        jobOffer.Status = dto.Status;
-        jobOffer.SalaryMin = dto.SalaryMin;
-        jobOffer.SalaryMax = dto.SalaryMax;
-        jobOffer.AppliedAt = dto.AppliedAt;
-        jobOffer.FollowUpDate = followUpDate;
-        jobOffer.RecruiterName = dto.RecruiterName;
+        jobOffer.Position        = dto.Position;
+        jobOffer.ContractType    = dto.ContractType;
+        jobOffer.WorkLoad        = dto.WorkLoad;
+        jobOffer.WorkMode        = dto.WorkMode;
+        jobOffer.CompanyName     = dto.CompanyName;
+        jobOffer.Location        = dto.Location;
+        jobOffer.SourceUrl       = dto.SourceUrl;
+        jobOffer.Status          = dto.Status;
+        jobOffer.SalaryMin       = dto.SalaryMin;
+        jobOffer.SalaryMax       = dto.SalaryMax;
+        jobOffer.AppliedAt       = dto.AppliedAt;
+        jobOffer.FollowUpDate    = followUpDate;
+        jobOffer.RecruiterName   = dto.RecruiterName;
         jobOffer.RecruiterContact = dto.RecruiterContact;
-        jobOffer.SentCvVersion = dto.SentCvVersion;
+        jobOffer.SentCvVersion   = dto.SentCvVersion;
         jobOffer.RejectionReason = dto.RejectionReason;
+
+        // Replace required skills: remove existing rows, then add updated ones.
+        _context.JobOfferSkills.RemoveRange(jobOffer.JobOfferSkills);
+        jobOffer.JobOfferSkills = [];
+
+        foreach (var skillRef in dto.RequiredSkills)
+        {
+            var skill = await FindOrCreateSkillAsync(skillRef.Id, skillRef.Name, null);
+            jobOffer.JobOfferSkills.Add(new JobOfferSkill { SkillId = skill.Id, Skill = skill });
+        }
+
+        // Recompute MatchScore for this offer only.
+        var userSkills = await _context.UserSkills.Where(s => s.UserId == 1).ToListAsync();
+        jobOffer.MatchScore = ComputeMatchScore(jobOffer.JobOfferSkills, userSkills);
 
         await _context.SaveChangesAsync();
         return true;
     }
 
+    /// <inheritdoc />
     public async Task<bool> UpdateStatusAsync(int id, ApplicationStatus status)
     {
         var jobOffer = await GetByIdAsync(id);
-        if (jobOffer == null) return false;
+        if (jobOffer is null) return false;
 
         jobOffer.Status = status;
         await _context.SaveChangesAsync();
         return true;
     }
 
+    /// <inheritdoc />
     public async Task<IEnumerable<JobOfferNote>?> GetNotesAsync(int offerId)
     {
         var offerExists = await _context.JobOffers.AnyAsync(j => j.Id == offerId);
@@ -118,6 +156,7 @@ public class JobOfferService : IJobOfferService
             .ToListAsync();
     }
 
+    /// <inheritdoc />
     public async Task<JobOfferNote?> AddNoteAsync(int offerId, JobOfferNoteDto dto)
     {
         var offerExists = await _context.JobOffers.AnyAsync(j => j.Id == offerId);
@@ -126,8 +165,8 @@ public class JobOfferService : IJobOfferService
         var note = new JobOfferNote
         {
             JobOfferId = offerId,
-            EventDate = dto.EventDate,
-            Content = dto.Content
+            EventDate  = dto.EventDate,
+            Content    = dto.Content
         };
 
         _context.JobOfferNotes.Add(note);
@@ -135,6 +174,7 @@ public class JobOfferService : IJobOfferService
         return note;
     }
 
+    /// <inheritdoc />
     public async Task<bool> DeleteNoteAsync(int offerId, int noteId)
     {
         var note = await _context.JobOfferNotes
@@ -166,7 +206,10 @@ public class JobOfferService : IJobOfferService
     /// <inheritdoc />
     public async Task ApplyScrapedResultAsync(int id, ScrapeResultDto result)
     {
-        var offer = await _context.JobOffers.FindAsync(id);
+        var offer = await _context.JobOffers
+            .Include(j => j.JobOfferSkills)
+            .FirstOrDefaultAsync(j => j.Id == id);
+
         if (offer is null) return;
 
         // Always transition to Draft — even on failure — to avoid stuck records.
@@ -174,44 +217,107 @@ public class JobOfferService : IJobOfferService
 
         if (!result.ScrapeFailed)
         {
-            // Only overwrite fields that have a value; keep the placeholder position if scraper returned null.
-            if (result.Position is not null)     offer.Position      = result.Position;
-            if (result.CompanyName is not null)  offer.CompanyName   = result.CompanyName;
-            if (result.Location is not null)     offer.Location      = result.Location;
-            if (result.SalaryMin is not null)    offer.SalaryMin     = result.SalaryMin;
-            if (result.SalaryMax is not null)    offer.SalaryMax     = result.SalaryMax;
-            if (result.ContractType is not null) offer.ContractType  = result.ContractType.Value;
-            if (result.WorkMode is not null)     offer.WorkMode      = result.WorkMode.Value;
-            if (result.WorkLoad is not null)     offer.WorkLoad      = result.WorkLoad.Value;
+            if (result.Position is not null)     offer.Position       = result.Position;
+            if (result.CompanyName is not null)  offer.CompanyName    = result.CompanyName;
+            if (result.Location is not null)     offer.Location       = result.Location;
+            if (result.SalaryMin is not null)    offer.SalaryMin      = result.SalaryMin;
+            if (result.SalaryMax is not null)    offer.SalaryMax      = result.SalaryMax;
+            if (result.ContractType is not null) offer.ContractType   = result.ContractType.Value;
+            if (result.WorkMode is not null)     offer.WorkMode       = result.WorkMode.Value;
+            if (result.WorkLoad is not null)     offer.WorkLoad       = result.WorkLoad.Value;
+
             if (result.RequiredSkills.Count > 0)
             {
-                var known = await GetKnownSkillsAsync();
-                offer.RequiredSkills = result.RequiredSkills
-                    .Where(s => known.Contains(s.ToLower()))
-                    .ToList();
+                // Store ALL scraped skills (no filtering by user profile).
+                // MatchScore is computed below from the full intersection.
+                _context.JobOfferSkills.RemoveRange(offer.JobOfferSkills);
+                offer.JobOfferSkills = [];
+
+                foreach (var skillName in result.RequiredSkills)
+                {
+                    if (string.IsNullOrWhiteSpace(skillName)) continue;
+                    var skill = await FindOrCreateSkillAsync(0, skillName, null);
+                    offer.JobOfferSkills.Add(new JobOfferSkill { SkillId = skill.Id, Skill = skill });
+                }
             }
         }
 
         // Use a sensible fallback position when the scrape produced nothing.
         if (offer.Position == "…")
-        {
             offer.Position = offer.SourceUrl ?? "Unknown";
-        }
+
+        // Recompute MatchScore with the freshly resolved skills.
+        var userSkills = await _context.UserSkills.Where(s => s.UserId == 1).ToListAsync();
+        offer.MatchScore = ComputeMatchScore(offer.JobOfferSkills, userSkills);
 
         await _context.SaveChangesAsync();
     }
 
-    private async Task<HashSet<string>> GetKnownSkillsAsync() =>
-        (await _context.UserSkills
-            .Select(s => s.SkillName.ToLower())
-            .ToListAsync())
-        .ToHashSet();
+    /// <inheritdoc />
+    public async Task RecomputeAllMatchScoresAsync()
+    {
+        // Load user skills once — avoids N+1 query pattern.
+        var userSkills = await _context.UserSkills
+            .Where(s => s.UserId == 1)
+            .ToListAsync();
 
-    private async Task<int?> ComputeMatchScoreAsync(List<string> requiredSkills)
+        var offers = await _context.JobOffers
+            .Include(j => j.JobOfferSkills)
+            .ToListAsync();
+
+        foreach (var offer in offers)
+            offer.MatchScore = ComputeMatchScore(offer.JobOfferSkills, userSkills);
+
+        await _context.SaveChangesAsync();
+    }
+
+    // ── Private helpers ────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Computes the percentage of required skills the user possesses (proficiency ≥ 1).
+    /// Returns <c>null</c> when the offer has no required skills.
+    /// </summary>
+    private static int? ComputeMatchScore(
+        ICollection<JobOfferSkill> requiredSkills,
+        ICollection<UserSkill> userSkills)
     {
         if (requiredSkills.Count == 0) return null;
-        var profileSkills = await GetKnownSkillsAsync();
-        var matched = requiredSkills.Count(r => profileSkills.Contains(r.ToLower()));
+
+        // Skills with Proficiency = 0 are "skill gaps" — not counted as a match.
+        var userSkillIds = userSkills
+            .Where(s => s.Proficiency > 0)
+            .Select(s => s.SkillId)
+            .ToHashSet();
+
+        var matched = requiredSkills.Count(r => userSkillIds.Contains(r.SkillId));
         return (int)Math.Round((double)matched / requiredSkills.Count * 100);
     }
+
+    /// <summary>
+    /// Finds an existing <see cref="Skill"/> by ID or name (case-insensitive),
+    /// or creates a new one if neither lookup succeeds.
+    /// </summary>
+    private async Task<Skill> FindOrCreateSkillAsync(int skillId, string name, string? category)
+    {
+        // Prefer lookup by ID when the caller already knows the canonical ID.
+        if (skillId > 0)
+        {
+            var byId = await _context.Skills.FindAsync(skillId);
+            if (byId is not null) return byId;
+        }
+
+        // Case-insensitive name lookup — relies on NOCASE collation at DB level as well.
+        var trimmedName = name.Trim();
+        var existing = await _context.Skills
+            .FirstOrDefaultAsync(s => s.Name.ToLower() == trimmedName.ToLower());
+
+        if (existing is not null) return existing;
+
+        // Create a new canonical skill row.
+        var skill = new Skill { Name = trimmedName, Category = category };
+        _context.Skills.Add(skill);
+        await _context.SaveChangesAsync();
+        return skill;
+    }
 }
+

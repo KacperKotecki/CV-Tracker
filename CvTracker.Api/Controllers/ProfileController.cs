@@ -1,15 +1,20 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using CvTracker.Api.Services;
 
 namespace CvTracker.Api.Controllers;
 
 [ApiController]
 [Route("api/profile")]
-public class ProfileController(AppDbContext db, IWebHostEnvironment env) : ControllerBase
+public class ProfileController(
+    AppDbContext db,
+    IWebHostEnvironment env,
+    IJobOfferService jobOfferService) : ControllerBase
 {
     private static readonly string[] AllowedAvatarExtensions = [".jpg", ".jpeg", ".png", ".webp"];
     private static readonly string[] AllowedResumeExtensions = [".pdf", ".doc", ".docx"];
 
+    /// <summary>Maps a UserProfile entity and its associated skills to a DTO.</summary>
     private static UserProfileDto MapToDto(UserProfile profile, List<UserSkill> skills)
     {
         return new UserProfileDto
@@ -28,34 +33,34 @@ public class ProfileController(AppDbContext db, IWebHostEnvironment env) : Contr
             ResumeUrl = profile.ResumeFileName != null
                 ? $"/uploads/resumes/{profile.ResumeFileName}"
                 : null,
-            Skills = skills.Select(s => new UserSkillDto
-            {
-                Id = s.Id,
-                Category = s.Category,
-                SkillName = s.SkillName,
-                Proficiency = s.Proficiency,
-            }).ToList(),
+            Skills = skills.Select(MapSkillToDto).ToList(),
         };
     }
+
+    private static UserSkillDto MapSkillToDto(UserSkill s) => new()
+    {
+        Id         = s.Id,
+        SkillId    = s.SkillId,
+        Category   = s.Skill.Category ?? string.Empty,
+        SkillName  = s.Skill.Name,
+        Proficiency = s.Proficiency,
+    };
 
     [HttpGet]
     public async Task<ActionResult<UserProfileDto>> Get()
     {
         var profile = await db.UserProfiles.FindAsync(1);
-        var skills = await db.UserSkills.ToListAsync();
+        var skills = await db.UserSkills
+            .Where(s => s.UserId == 1)
+            .Include(s => s.Skill)
+            .ToListAsync();
 
-        if (profile == null)
+        if (profile is null)
         {
             return Ok(new UserProfileDto
             {
                 Id = 0,
-                Skills = skills.Select(s => new UserSkillDto
-                {
-                    Id = s.Id,
-                    Category = s.Category,
-                    SkillName = s.SkillName,
-                    Proficiency = s.Proficiency,
-                }).ToList(),
+                Skills = skills.Select(MapSkillToDto).ToList(),
             });
         }
 
@@ -70,29 +75,33 @@ public class ProfileController(AppDbContext db, IWebHostEnvironment env) : Contr
             return BadRequest(ModelState);
 
         var profile = await db.UserProfiles.FindAsync(1);
-        if (profile == null)
+        if (profile is null)
         {
             profile = new UserProfile { Id = 1 };
             db.UserProfiles.Add(profile);
         }
 
-        profile.FirstName = req.FirstName;
-        profile.LastName = req.LastName;
-        profile.Location = req.Location;
+        profile.FirstName   = req.FirstName;
+        profile.LastName    = req.LastName;
+        profile.Location    = req.Location;
         profile.LinkedInUrl = req.LinkedInUrl;
-        profile.GitHubUrl = req.GitHubUrl;
-        profile.WebsiteUrl = req.WebsiteUrl;
+        profile.GitHubUrl   = req.GitHubUrl;
+        profile.WebsiteUrl  = req.WebsiteUrl;
 
         await db.SaveChangesAsync();
 
-        var skills = await db.UserSkills.ToListAsync();
+        var skills = await db.UserSkills
+            .Where(s => s.UserId == 1)
+            .Include(s => s.Skill)
+            .ToListAsync();
+
         return Ok(MapToDto(profile, skills));
     }
 
     [HttpPost("avatar")]
     public async Task<ActionResult> UploadAvatar(IFormFile file)
     {
-        if (file == null || file.Length == 0)
+        if (file is null || file.Length == 0)
             return BadRequest("No file provided.");
 
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
@@ -109,7 +118,7 @@ public class ProfileController(AppDbContext db, IWebHostEnvironment env) : Contr
         await file.CopyToAsync(stream);
 
         var profile = await db.UserProfiles.FindAsync(1);
-        if (profile == null)
+        if (profile is null)
         {
             profile = new UserProfile { Id = 1 };
             db.UserProfiles.Add(profile);
@@ -124,7 +133,7 @@ public class ProfileController(AppDbContext db, IWebHostEnvironment env) : Contr
     [HttpPost("resume")]
     public async Task<ActionResult> UploadResume(IFormFile file)
     {
-        if (file == null || file.Length == 0)
+        if (file is null || file.Length == 0)
             return BadRequest("No file provided.");
 
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
@@ -141,7 +150,7 @@ public class ProfileController(AppDbContext db, IWebHostEnvironment env) : Contr
         await file.CopyToAsync(stream);
 
         var profile = await db.UserProfiles.FindAsync(1);
-        if (profile == null)
+        if (profile is null)
         {
             profile = new UserProfile { Id = 1 };
             db.UserProfiles.Add(profile);
@@ -160,24 +169,57 @@ public class ProfileController(AppDbContext db, IWebHostEnvironment env) : Contr
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var existing = await db.UserSkills.ToListAsync();
+        // Delete-reinsert runs inside a single UoW: all changes committed atomically.
+        var existing = await db.UserSkills.Where(s => s.UserId == 1).ToListAsync();
         db.UserSkills.RemoveRange(existing);
 
-        db.UserSkills.AddRange(req.Skills.Select(s => new UserSkill
+        foreach (var s in req.Skills)
         {
-            Category = s.Category,
-            SkillName = s.SkillName,
-            Proficiency = s.Proficiency,
-        }));
+            // Resolve (or create) the canonical Skill entity for each requested item.
+            var skill = await FindOrCreateSkillAsync(s.SkillId, s.SkillName, s.Category);
+            db.UserSkills.Add(new UserSkill
+            {
+                SkillId     = skill.Id,
+                UserId      = 1,
+                Proficiency = s.Proficiency,
+            });
+        }
 
         await db.SaveChangesAsync();
 
-        return Ok(db.UserSkills.Select(s => new UserSkillDto
+        // Recompute MatchScore for all offers now that user skills have changed.
+        await jobOfferService.RecomputeAllMatchScoresAsync();
+
+        var skills = await db.UserSkills
+            .Where(s => s.UserId == 1)
+            .Include(s => s.Skill)
+            .ToListAsync();
+
+        return Ok(skills.Select(MapSkillToDto).ToList());
+    }
+
+    /// <summary>
+    /// Finds an existing <see cref="Skill"/> by ID or name (case-insensitive),
+    /// or creates a new one if neither lookup succeeds.
+    /// </summary>
+    private async Task<Skill> FindOrCreateSkillAsync(int skillId, string name, string? category)
+    {
+        if (skillId > 0)
         {
-            Id = s.Id,
-            Category = s.Category,
-            SkillName = s.SkillName,
-            Proficiency = s.Proficiency,
-        }).ToList());
+            var byId = await db.Skills.FindAsync(skillId);
+            if (byId is not null) return byId;
+        }
+
+        var trimmedName = name.Trim();
+        var existing = await db.Skills
+            .FirstOrDefaultAsync(s => s.Name.ToLower() == trimmedName.ToLower());
+
+        if (existing is not null) return existing;
+
+        var skill = new Skill { Name = trimmedName, Category = category };
+        db.Skills.Add(skill);
+        await db.SaveChangesAsync();
+        return skill;
     }
 }
+

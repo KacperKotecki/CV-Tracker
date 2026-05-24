@@ -91,7 +91,7 @@ export default function OfferDetailView({ offer, notes, onEdit, onStatusChange, 
       {skills.length > 0 && (
         <div className="offer-detail-view__skills">
           {skills.map(skill => (
-            <span key={skill} className="tag">{skill}</span>
+            <span key={`${skill.id}-${skill.name}`} className="tag">{skill.name}</span>
           ))}
         </div>
       )}

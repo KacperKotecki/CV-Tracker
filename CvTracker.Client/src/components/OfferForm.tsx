@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { JobOffer } from '../../models/JobOffer'
+import type { JobOffer, SkillRef } from '../../models/JobOffer'
 import { applicationStatusOptions, type ApplicationStatus } from '../../models/ApplicationStatus'
 import { contractTypeOptions } from '../../models/ContractType'
 import { workModeOptions } from '../../models/WorkMode'
@@ -34,7 +34,7 @@ function makeEmptyForm() {
     companyName: '',
     location: '',
     sourceUrl: '',
-    requiredSkills: [] as string[],
+    requiredSkills: [] as SkillRef[],
     appliedAt,
     followUpDate: '',
     recruiterName: '',

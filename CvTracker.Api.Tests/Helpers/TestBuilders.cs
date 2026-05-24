@@ -44,4 +44,13 @@ public static class TestBuilders
             EventDate = eventDate ?? DateTimeOffset.UtcNow
         };
     }
+
+    /// <summary>Creates a canonical Skill entity for use in unit tests.</summary>
+    public static Skill BuildSkill(int id, string name, string? category = null) =>
+        new() { Id = id, Name = name, Category = category };
+
+    /// <summary>Creates a UserSkill entity linked to a Skill for use in unit tests.</summary>
+    public static UserSkill BuildUserSkill(int skillId, int proficiency = 3) =>
+        new() { SkillId = skillId, UserId = 1, Proficiency = proficiency };
 }
+

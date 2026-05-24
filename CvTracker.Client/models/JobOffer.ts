@@ -1,6 +1,11 @@
 import type { ApplicationStatus } from './ApplicationStatus'
 import type { JobOfferNote } from './JobOfferNote'
 
+export interface SkillRef {
+  id: number
+  name: string
+}
+
 export interface JobOffer {
   id: number
   position: string
@@ -9,7 +14,7 @@ export interface JobOffer {
   workLoad: string
   companyName: string | null
   location: string | null
-  requiredSkills: string[]
+  requiredSkills: SkillRef[]
   matchScore: number | null
   sourceUrl?: string | null
   status: ApplicationStatus

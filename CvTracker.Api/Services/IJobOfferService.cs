@@ -27,4 +27,11 @@ public interface IJobOfferService
     /// to prevent records from being permanently stuck in <see cref="ApplicationStatus.ScrapingInProgress"/>.
     /// </summary>
     Task ApplyScrapedResultAsync(int id, ScrapeResultDto result);
+
+    /// <summary>
+    /// Recomputes <see cref="JobOffer.MatchScore"/> for every offer in the database
+    /// using the current user skills (UserId = 1). Called after the user updates their skills.
+    /// </summary>
+    Task RecomputeAllMatchScoresAsync();
 }
+
