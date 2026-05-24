@@ -1,5 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 
+/// <remarks>
+/// This DTO was used by the old synchronous LLM-based scrape endpoint (200 OK).
+/// It is now dead code — the endpoint returns <see cref="ScrapeJobResponseDto"/> (202 Accepted).
+/// Kept here to avoid compilation errors in any code that may still reference it.
+/// </remarks>
+[Obsolete("ScrapedOfferDto is no longer returned by POST /api/scrape. Use ScrapeJobResponseDto instead.")]
 public class ScrapedOfferDto
 {
     public string? Position { get; set; }

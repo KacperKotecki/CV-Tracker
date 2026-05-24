@@ -1,5 +1,6 @@
 using CvTracker.Api.Models;
 using CvTracker.Api.Services;
+using CvTracker.Api.Services.Scraping;
 using Microsoft.EntityFrameworkCore;
 
 namespace CvTracker.Api.Services;
@@ -138,19 +139,78 @@ public class JobOfferService : IJobOfferService
     {
         var note = await _context.JobOfferNotes
             .FirstOrDefaultAsync(n => n.Id == noteId && n.JobOfferId == offerId);
-        if (note == null) return false;
+        if (note is null) return false;
 
         _context.JobOfferNotes.Remove(note);
         await _context.SaveChangesAsync();
         return true;
     }
 
+    /// <inheritdoc />
+    public async Task<JobOffer> CreateScrapingStubAsync(string url)
+    {
+        // Create a minimal placeholder so the background scrape task has an ID to write to.
+        var stub = new JobOffer
+        {
+            Position  = "…",  // placeholder — replaced by ApplyScrapedResultAsync
+            Status    = ApplicationStatus.ScrapingInProgress,
+            SourceUrl = url,
+            AppliedAt = DateTimeOffset.UtcNow,
+        };
+
+        _context.JobOffers.Add(stub);
+        await _context.SaveChangesAsync();
+        return stub;
+    }
+
+    /// <inheritdoc />
+    public async Task ApplyScrapedResultAsync(int id, ScrapeResultDto result)
+    {
+        var offer = await _context.JobOffers.FindAsync(id);
+        if (offer is null) return;
+
+        // Always transition to Draft — even on failure — to avoid stuck records.
+        offer.Status = ApplicationStatus.Draft;
+
+        if (!result.ScrapeFailed)
+        {
+            // Only overwrite fields that have a value; keep the placeholder position if scraper returned null.
+            if (result.Position is not null)     offer.Position      = result.Position;
+            if (result.CompanyName is not null)  offer.CompanyName   = result.CompanyName;
+            if (result.Location is not null)     offer.Location      = result.Location;
+            if (result.SalaryMin is not null)    offer.SalaryMin     = result.SalaryMin;
+            if (result.SalaryMax is not null)    offer.SalaryMax     = result.SalaryMax;
+            if (result.ContractType is not null) offer.ContractType  = result.ContractType.Value;
+            if (result.WorkMode is not null)     offer.WorkMode      = result.WorkMode.Value;
+            if (result.WorkLoad is not null)     offer.WorkLoad      = result.WorkLoad.Value;
+            if (result.RequiredSkills.Count > 0)
+            {
+                var known = await GetKnownSkillsAsync();
+                offer.RequiredSkills = result.RequiredSkills
+                    .Where(s => known.Contains(s.ToLower()))
+                    .ToList();
+            }
+        }
+
+        // Use a sensible fallback position when the scrape produced nothing.
+        if (offer.Position == "…")
+        {
+            offer.Position = offer.SourceUrl ?? "Unknown";
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    private async Task<HashSet<string>> GetKnownSkillsAsync() =>
+        (await _context.UserSkills
+            .Select(s => s.SkillName.ToLower())
+            .ToListAsync())
+        .ToHashSet();
+
     private async Task<int?> ComputeMatchScoreAsync(List<string> requiredSkills)
     {
         if (requiredSkills.Count == 0) return null;
-        var profileSkills = await _context.UserSkills
-            .Select(s => s.SkillName.ToLower())
-            .ToListAsync();
+        var profileSkills = await GetKnownSkillsAsync();
         var matched = requiredSkills.Count(r => profileSkills.Contains(r.ToLower()));
         return (int)Math.Round((double)matched / requiredSkills.Count * 100);
     }

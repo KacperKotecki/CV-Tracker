@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { JobOffer } from '../../models/JobOffer'
 import { applicationStatusOptions, type ApplicationStatus } from '../../models/ApplicationStatus'
 import { contractTypeOptions } from '../../models/ContractType'
@@ -7,18 +8,6 @@ import { workLoadOptions } from '../../models/WorkLoad'
 import OfferSkillPicker from './OfferSkillPicker'
 import './OfferForm.css'
 import './OfferSkillPicker.css'
-
-interface ScrapedOffer {
-  position: string | null
-  salaryMin: number | null
-  salaryMax: number | null
-  contractType: string | null
-  workMode: string | null
-  workLoad: string | null
-  requiredSkills: string[]
-  companyName: string | null
-  location: string | null
-}
 
 function toDateTimeLocal(value: string | null | undefined): string {
   if (!value) return ''
@@ -60,6 +49,7 @@ export default function OfferForm({ offer, onSave, onCancel }: Props) {
   const [form, setForm] = useState(makeEmptyForm)
   const [offerUrl, setOfferUrl] = useState('')
   const [isScraping, setIsScraping] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (offer) {
@@ -87,6 +77,10 @@ export default function OfferForm({ offer, onSave, onCancel }: Props) {
     }
   }, [offer])
 
+  /**
+   * Fire-and-redirect: POST /api/scrape → receive { id } (202) → navigate to ScrapingPage.
+   * The background scrape runs on the server; the frontend polls for completion.
+   */
   const handleScrape = async () => {
     if (!offerUrl.trim()) return
     setIsScraping(true)
@@ -101,20 +95,8 @@ export default function OfferForm({ offer, onSave, onCancel }: Props) {
         window.alert(`Błąd: ${msg}`)
         return
       }
-      const data: ScrapedOffer = await r.json()
-      setForm(prev => ({
-        ...prev,
-        position:     data.position     ?? prev.position,
-        salaryMin:    data.salaryMin    != null ? String(data.salaryMin) : prev.salaryMin,
-        salaryMax:    data.salaryMax    != null ? String(data.salaryMax) : prev.salaryMax,
-        contractType: data.contractType ?? prev.contractType,
-        workMode:     data.workMode     ?? prev.workMode,
-        workLoad:     data.workLoad     ?? prev.workLoad,
-        companyName:  data.companyName  ?? prev.companyName,
-        location:     data.location     ?? prev.location,
-        requiredSkills: data.requiredSkills?.length ? data.requiredSkills : prev.requiredSkills,
-        sourceUrl:    offerUrl,
-      }))
+      const data: { id: number } = await r.json()
+      navigate(`/scraping/${data.id}`)
     } catch {
       window.alert('Błąd połączenia z serwerem.')
     } finally {
@@ -216,3 +198,4 @@ export default function OfferForm({ offer, onSave, onCancel }: Props) {
     </div>
   )
 }
+

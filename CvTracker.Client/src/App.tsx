@@ -4,6 +4,7 @@ import Header from './components/Header'
 import OffersPage from './pages/OffersPage'
 import Dashboard from './pages/Dashboard'
 import ProfilePage from './pages/ProfilePage'
+import ScrapingPage from './pages/ScrapingPage'
 
 function Layout() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
         <Route path="/" element={<OffersPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/scraping/:id" element={<ScrapingPage />} />
       </Route>
     </Routes>
   )

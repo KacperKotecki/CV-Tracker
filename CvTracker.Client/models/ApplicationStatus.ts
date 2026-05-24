@@ -1,2 +1,2 @@
-export const applicationStatusOptions = ['Draft', 'Applied', 'HRScreening', 'TechnicalInterview', 'LiveCodingOrAssignment', 'AwaitingFeedback', 'Rejected', 'Accepted', 'Ghosted'] as const
+export const applicationStatusOptions = ['ScrapingInProgress', 'Draft', 'Applied', 'HRScreening', 'TechnicalInterview', 'LiveCodingOrAssignment', 'AwaitingFeedback', 'Rejected', 'Accepted', 'Ghosted'] as const
 export type ApplicationStatus = typeof applicationStatusOptions[number]

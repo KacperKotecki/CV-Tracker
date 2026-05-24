@@ -4,6 +4,7 @@ import ApplicationCard from './ApplicationCard';
 import './StatusColumn.css';
 
 const statusLabels: Record<ApplicationStatus, string> = {
+  ScrapingInProgress:     'Scraping…',
   Draft:                  'Draft',
   Applied:                'Applied',
   HRScreening:            'HR Screening',

@@ -1,217 +1,107 @@
+using CvTracker.Api.Controllers.Models.DTOs;
+using CvTracker.Api.Services;
+using CvTracker.Api.Services.Scraping;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.Json;
-using System.Text.RegularExpressions;
 
+namespace CvTracker.Api.Controllers;
+
+/// <summary>
+/// Handles asynchronous job-offer scraping.
+/// <c>POST /api/scrape</c> immediately returns 202 Accepted with the new offer ID
+/// and delegates actual scraping to a background <see cref="Task"/> using
+/// <see cref="IServiceScopeFactory"/> so scoped services (EF Core context) are safe to use.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class ScrapeController : ControllerBase
 {
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly IConfiguration _configuration;
+    private readonly IJobOfferService    _jobOfferService;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<ScrapeController> _logger;
 
+    /// <summary>Initialises the controller with its required dependencies.</summary>
     public ScrapeController(
-        IHttpClientFactory httpClientFactory,
-        IConfiguration configuration,
+        IJobOfferService     jobOfferService,
+        IServiceScopeFactory scopeFactory,
         ILogger<ScrapeController> logger)
     {
-        _httpClientFactory = httpClientFactory;
-        _configuration = configuration;
-        _logger = logger;
+        _jobOfferService = jobOfferService;
+        _scopeFactory    = scopeFactory;
+        _logger          = logger;
     }
 
+    /// <summary>
+    /// Creates a <see cref="JobOffer"/> stub (status <c>ScrapingInProgress</c>) and fires a
+    /// background scrape task. Returns 202 Accepted with the new offer ID immediately.
+    /// </summary>
+    /// <param name="request">Scrape request containing the job-offer URL.</param>
+    /// <returns>202 Accepted — <see cref="ScrapeJobResponseDto"/> with the new offer ID.</returns>
     [HttpPost]
-    public async Task<ActionResult<ScrapedOfferDto>> ScrapeOffer([FromBody] ScrapeRequest request)
+    [ProducesResponseType(typeof(ScrapeJobResponseDto), StatusCodes.Status202Accepted)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ScrapeJobResponseDto>> ScrapeOffer([FromBody] ScrapeRequest request)
     {
         if (!Uri.TryCreate(request.Url, UriKind.Absolute, out var uri) ||
             (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
         {
-            return BadRequest("Nieprawidłowy URL. Podaj pełny adres z http:// lub https://.");
-        }
-
-        string pageText;
-        try
-        {
-            var scrapeClient = _httpClientFactory.CreateClient("ScrapeClient");
-            var html = await scrapeClient.GetStringAsync(uri);
-            pageText = StripHtml(html);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to fetch URL: {Url}", request.Url);
-            return BadRequest("Nie udało się pobrać strony pod podanym URL.");
-        }
-
-        if (pageText.Length < 300)
-        {
-            _logger.LogWarning("Scraped text too short ({Length} chars) for URL: {Url}", pageText.Length, request.Url);
-            return UnprocessableEntity(
-                "Nie udało się pobrać treści oferty. Strona może wymagać JavaScript lub jest zabezpieczona przed automatycznym pobieraniem.");
-        }
-
-        if (pageText.Length > 12000)
-            pageText = pageText[..12000];
-
-        var apiKey = _configuration["OpenRouter:ApiKey"];
-        var model = _configuration["OpenRouter:Model"] ?? "mistralai/mistral-7b-instruct:free";
-        if (string.IsNullOrWhiteSpace(apiKey))
-        {
-            _logger.LogError("OpenRouter:ApiKey is not configured.");
-            return StatusCode(500, "Brak konfiguracji klucza API OpenRouter.");
-        }
-
-        if (string.IsNullOrWhiteSpace(model))        {
-            _logger.LogError("OpenRouter:Model is not configured.");
-            return StatusCode(500, "Brak konfiguracji modelu OpenRouter.");
-        }
-
-        ScrapedOfferDto? result;
-        string? rawAiResponse;
-        string prompt;
-        try
-        {
-            (result, rawAiResponse, prompt) = await CallOpenRouter(apiKey, model, pageText);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "OpenRouter API call failed.");
-            return StatusCode(500, "Błąd podczas analizy oferty przez AI.");
-        }
-
-        await WriteDebugLogAsync(request.Url, pageText, prompt, rawAiResponse);
-
-        if (result is null)
-            return StatusCode(500, "AI nie zwróciło poprawnych danych.");
-
-        return Ok(result);
-    }
-
-    private static string StripHtml(string html)
-    {
-        html = Regex.Replace(html,
-            @"<(script|style|head|nav|footer|header|aside|form)[^>]*>[\s\S]*?</(script|style|head|nav|footer|header|aside|form)>",
-            " ", RegexOptions.IgnoreCase);
-        html = Regex.Replace(html, @"<[^>]+>", " ");
-        html = WebUtility.HtmlDecode(html);
-        html = Regex.Replace(html, @"\s+", " ").Trim();
-        return html;
-    }
-
-    private async Task<(ScrapedOfferDto? result, string? rawAiResponse, string prompt)> CallOpenRouter(string apiKey, string model, string pageText)
-    {
-        // Static instructions go to "system" — models follow system role more reliably.
-        // No interpolation needed here so raw string literal is safe with JSON braces.
-        const string systemPrompt = """
-            Jesteś ekspertem do ekstrakcji danych z ogłoszeń o pracę.
-
-            BEZWZGLĘDNE ZASADY:
-            1. Odpowiedź to WYŁĄCZNIE obiekt JSON — żadnego markdown, żadnych komentarzy, żadnego tekstu przed ani po.
-            2. Każde nieznane lub brakujące pole ustaw na null. Nigdy nie używaj "", 0 ani "brak".
-            3. Jeśli tekst jest pusty, jest hashem, kodem błędu lub NIE jest ogłoszeniem o pracę — zwróć JSON ze WSZYSTKIMI polami równymi null.
-            4. Zachowaj język oryginału: polska oferta → pola po polsku; angielska → po angielsku.
-
-            DOZWOLONE WARTOŚCI ENUM (tylko te lub null, wielkość liter musi się zgadzać):
-            contractType : "UoP" | "B2B" | "MandateContract" | "SpecificWorkContract" | "Internship" | "Apprenticeship"
-            workMode     : "OnSite" | "Remote" | "Hybrid"
-            workLoad     : "FullTime" | "PartTime"
-
-            POLE salary — TYLKO liczba całkowita PLN brutto miesięcznie:
-            - Widełki brutto → środek: "8 000–12 000 zł brutto" → (8000+12000)/2 = 10000
-            - Wartość netto B2B → pomnóż ×1.23: "10 000 zł netto" → 10000×1.23 = 12300
-            - Widełki netto B2B → środek, potem ×1.23: "18 000–22 000 netto B2B" → 20000×1.23 = 24600
-            - Brak informacji → null
-
-            PRZYKŁAD WEJŚCIA:
-            "Senior Java Developer – Kraków. Wynagrodzenie: 18 000–22 000 PLN netto B2B. Praca hybrydowa (2 dni z biura). Wymagania: Java 17+, Spring Boot, min. 5 lat doświadczenia. Oferujemy: prywatna opieka medyczna LuxMed, karta Multisport."
-
-            PRZYKŁAD WYJŚCIA (dokładnie ten format, nic więcej):
-            {"position":"Senior Java Developer","salary":24600,"contractType":"B2B","workMode":"Hybrid","workLoad":"FullTime","skills":"Java 17+, Spring Boot","ourRequirements":"min. 5 lat doświadczenia, Java 17+, Spring Boot","whatWeOffer":"prywatna opieka medyczna LuxMed, karta Multisport","benefits":"prywatna opieka medyczna LuxMed, karta Multisport","companyName":null,"location":"Kraków"}
-
-            SCHEMAT — wszystkie pola są wymagane:
-            {"position":null,"salary":null,"contractType":null,"workMode":null,"workLoad":null,"skills":null,"ourRequirements":null,"whatWeOffer":null,"benefits":null,"companyName":null,"location":null}
-            """;
-
-        var userContent = $"Przeanalizuj poniższy tekst i zwróć JSON:\n\n{pageText}";
-        var fullPromptForLog = $"[SYSTEM]\n{systemPrompt}\n\n[USER]\n{userContent}";
-
-        var requestBody = new
-        {
-            model,
-            messages = new object[]
+            return ValidationProblem(new ValidationProblemDetails
             {
-                new { role = "system", content = systemPrompt },
-                new { role = "user",   content = userContent  }
-            }
-        };
+                Detail = "Nieprawidłowy URL. Podaj pełny adres z http:// lub https://.",
+            });
+        }
 
-        using var httpRequest = new HttpRequestMessage(
-            HttpMethod.Post,
-            "https://openrouter.ai/api/v1/chat/completions");
+        // Persist the stub synchronously so we can return the ID to the client.
+        var stub = await _jobOfferService.CreateScrapingStubAsync(request.Url);
 
-        httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-        httpRequest.Content = new StringContent(
-            JsonSerializer.Serialize(requestBody),
-            Encoding.UTF8,
-            "application/json");
+        // Fire-and-forget background scrape using IServiceScopeFactory so that
+        // scoped services (AppDbContext) can be resolved safely inside Task.Run.
+        _ = Task.Run(() => RunBackgroundScrapeAsync(stub.Id, uri));
 
-        var client = _httpClientFactory.CreateClient("OpenRouterClient");
-        var response = await client.SendAsync(httpRequest);
-        response.EnsureSuccessStatusCode();
+        return Accepted(new ScrapeJobResponseDto(stub.Id));
+    }
 
-        var responseJson = await response.Content.ReadAsStringAsync();
-        using var doc = JsonDocument.Parse(responseJson);
+    // -----------------------------------------------------------------
+    // Private background method
+    // -----------------------------------------------------------------
 
-        var messageContent = doc.RootElement
-            .GetProperty("choices")[0]
-            .GetProperty("message")
-            .GetProperty("content")
-            .GetString();
+    /// <summary>
+    /// Background scrape task. Resolves a DI scope, selects the correct scraper via
+    /// <see cref="IScraperFactory"/>, and applies the result with
+    /// <see cref="IJobOfferService.ApplyScrapedResultAsync"/>.
+    /// All exceptions are caught and logged — unhandled exceptions in Task.Run
+    /// are silently swallowed in .NET 6+.
+    /// </summary>
+    private async Task RunBackgroundScrapeAsync(int offerId, Uri uri)
+    {
+        await using var scope = _scopeFactory.CreateAsyncScope();
 
-        if (string.IsNullOrEmpty(messageContent)) return (null, messageContent, fullPromptForLog);
+        var scraperFactory   = scope.ServiceProvider.GetRequiredService<IScraperFactory>();
+        var jobOfferService  = scope.ServiceProvider.GetRequiredService<IJobOfferService>();
+        var logger           = scope.ServiceProvider.GetRequiredService<ILogger<ScrapeController>>();
 
-        var json = ExtractJson(messageContent);
-        var result = JsonSerializer.Deserialize<ScrapedOfferDto>(json, new JsonSerializerOptions
+        ScrapeResultDto result;
+        try
         {
-            PropertyNameCaseInsensitive = true
-        });
+            var scraper = scraperFactory.GetScraper(uri);
+            result = await scraper.ScrapeAsync(uri);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unhandled exception while scraping offer {OfferId} at {Uri}", offerId, uri);
+            result = new ScrapeResultDto(
+                null, null, null, null, null, null, null, null, [],
+                null, null, null, true, ex.Message);
+        }
 
-        return (result, messageContent, fullPromptForLog);
-    }
-
-    private static async Task WriteDebugLogAsync(string url, string pageText, string prompt, string? aiResponse)
-    {
-        var separator = new string('=', 80);
-        var entry = new StringBuilder();
-        entry.AppendLine(separator);
-        entry.AppendLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}]  URL: {url}");
-        entry.AppendLine(separator);
-        entry.AppendLine();
-        entry.AppendLine("--- WYCIĄGNIĘTY TEKST ZE STRONY ---");
-        entry.AppendLine(pageText);
-        entry.AppendLine();
-        entry.AppendLine("--- PROMPT WYSŁANY DO MODELU ---");
-        entry.AppendLine(prompt);
-        entry.AppendLine();
-        entry.AppendLine("--- ODPOWIEDŹ MODELU ---");
-        entry.AppendLine(aiResponse ?? "(brak odpowiedzi)");
-        entry.AppendLine();
-
-        var logPath = Path.Combine(AppContext.BaseDirectory, "scrape-debug.log");
-        await System.IO.File.AppendAllTextAsync(logPath, entry.ToString(), Encoding.UTF8);
-    }
-
-    private static string ExtractJson(string content)
-    {
-        var match = Regex.Match(content, @"```(?:json)?\s*([\s\S]*?)\s*```");
-        if (match.Success) return match.Groups[1].Value;
-
-        var start = content.IndexOf('{');
-        var end = content.LastIndexOf('}');
-        if (start >= 0 && end > start) return content[start..(end + 1)];
-
-        return content.Trim();
+        try
+        {
+            // Always apply — even on failure — to transition status away from ScrapingInProgress.
+            await jobOfferService.ApplyScrapedResultAsync(offerId, result);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to apply scrape result for offer {OfferId}", offerId);
+        }
     }
 }
+

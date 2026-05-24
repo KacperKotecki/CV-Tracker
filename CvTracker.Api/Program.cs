@@ -1,8 +1,13 @@
 using Microsoft.EntityFrameworkCore;
+using CvTracker.Api.Models;
 using CvTracker.Api.Services;
+using CvTracker.Api.Services.Scraping;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ── Named HttpClients ──────────────────────────────────────────────────────────
+
+// Generic browser-like client for fetching raw HTML (PracujPl, FallbackScraper).
 builder.Services.AddHttpClient("ScrapeClient", client =>
 {
     client.Timeout = TimeSpan.FromSeconds(15);
@@ -24,10 +29,8 @@ builder.Services.AddHttpClient("ScrapeClient", client =>
     AllowAutoRedirect = true,
     MaxAutomaticRedirections = 5
 });
-builder.Services.AddHttpClient("OpenRouterClient", client =>
-{
-    client.Timeout = TimeSpan.FromSeconds(120);
-});
+
+// ── MVC / JSON ─────────────────────────────────────────────────────────────────
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -43,12 +46,38 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod());
 });
 
+// ── Data ───────────────────────────────────────────────────────────────────────
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// ── Application Services ───────────────────────────────────────────────────────
+
 builder.Services.AddScoped<IJobOfferService, JobOfferService>();
 
+// Scraping: register all concrete scrapers so ScraperFactory can receive them via DI.
+builder.Services.AddScoped<JustJoinItScraper>();
+builder.Services.AddScoped<NoFluffJobsScraper>();
+builder.Services.AddScoped<PracujPlScraper>();
+builder.Services.AddScoped<FallbackScraper>();
+builder.Services.AddScoped<IScraperFactory, ScraperFactory>();
+
+// ── Build ──────────────────────────────────────────────────────────────────────
+
 var app = builder.Build();
+
+// ── Startup sweep: reset stuck ScrapingInProgress records ─────────────────────
+// If the process was killed while a background scrape was running, records may
+// remain in ScrapingInProgress forever. Reset them to Draft on every startup.
+using (var startupScope = app.Services.CreateScope())
+{
+    var db = startupScope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.JobOffers
+        .Where(j => j.Status == ApplicationStatus.ScrapingInProgress)
+        .ExecuteUpdateAsync(s => s.SetProperty(j => j.Status, ApplicationStatus.Draft));
+}
+
+// ── Middleware pipeline ────────────────────────────────────────────────────────
 
 if (app.Environment.IsDevelopment())
 {
@@ -61,7 +90,7 @@ app.UseCors("AllowReact");
 app.UseStaticFiles();
 app.UseAuthorization();
 
-// Ensure upload directories exist
+// Ensure upload directories exist.
 var wwwroot = app.Environment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
 Directory.CreateDirectory(Path.Combine(wwwroot, "uploads", "avatars"));
 Directory.CreateDirectory(Path.Combine(wwwroot, "uploads", "resumes"));

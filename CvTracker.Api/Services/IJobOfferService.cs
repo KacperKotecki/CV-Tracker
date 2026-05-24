@@ -1,4 +1,5 @@
 using CvTracker.Api.Models;
+using CvTracker.Api.Services.Scraping;
 
 namespace CvTracker.Api.Services;
 
@@ -12,4 +13,18 @@ public interface IJobOfferService
     Task<IEnumerable<JobOfferNote>?> GetNotesAsync(int offerId);
     Task<JobOfferNote?> AddNoteAsync(int offerId, JobOfferNoteDto dto);
     Task<bool> DeleteNoteAsync(int offerId, int noteId);
+
+    /// <summary>
+    /// Creates a placeholder <see cref="JobOffer"/> with status <see cref="ApplicationStatus.ScrapingInProgress"/>
+    /// and stores the source URL. Returns the new offer so the caller can obtain its ID.
+    /// </summary>
+    Task<JobOffer> CreateScrapingStubAsync(string url);
+
+    /// <summary>
+    /// Applies the structured scrape result to an existing offer and transitions
+    /// its status to <see cref="ApplicationStatus.Draft"/>.
+    /// Always called — even when <see cref="ScrapeResultDto.ScrapeFailed"/> is true —
+    /// to prevent records from being permanently stuck in <see cref="ApplicationStatus.ScrapingInProgress"/>.
+    /// </summary>
+    Task ApplyScrapedResultAsync(int id, ScrapeResultDto result);
 }
