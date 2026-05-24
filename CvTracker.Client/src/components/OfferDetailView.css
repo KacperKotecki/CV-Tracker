@@ -1,6 +1,5 @@
 .offer-detail-view {
   padding: 28px 32px;
-  max-width: 860px;
 
   @media (max-width: 1024px) {
     padding: 20px 16px;

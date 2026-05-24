@@ -31,28 +31,33 @@ interface Props {
   onCancel: () => void
 }
 
-const emptyForm = {
-  position: '',
-  salaryMin: '',
-  salaryMax: '',
-  contractType: '',
-  workMode: '',
-  workLoad: '',
-  companyName: '',
-  location: '',
-  sourceUrl: '',
-  requiredSkills: [] as string[],
-  appliedAt: '',
-  followUpDate: '',
-  recruiterName: '',
-  recruiterContact: '',
-  sentCvVersion: '',
-  rejectionReason: '',
-  status: applicationStatusOptions[0] as ApplicationStatus,
+function makeEmptyForm() {
+  const now = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const appliedAt = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`
+  return {
+    position: '',
+    salaryMin: '',
+    salaryMax: '',
+    contractType: 'UoP',
+    workMode: 'OnSite',
+    workLoad: 'FullTime',
+    companyName: '',
+    location: '',
+    sourceUrl: '',
+    requiredSkills: [] as string[],
+    appliedAt,
+    followUpDate: '',
+    recruiterName: '',
+    recruiterContact: '',
+    sentCvVersion: '',
+    rejectionReason: '',
+    status: applicationStatusOptions[0] as ApplicationStatus,
+  }
 }
 
 export default function OfferForm({ offer, onSave, onCancel }: Props) {
-  const [form, setForm] = useState(emptyForm)
+  const [form, setForm] = useState(makeEmptyForm)
   const [offerUrl, setOfferUrl] = useState('')
   const [isScraping, setIsScraping] = useState(false)
 
@@ -78,7 +83,7 @@ export default function OfferForm({ offer, onSave, onCancel }: Props) {
         status:           offer.status            ?? applicationStatusOptions[0],
       })
     } else {
-      setForm(emptyForm)
+      setForm(makeEmptyForm())
     }
   }, [offer])
 
@@ -118,8 +123,8 @@ export default function OfferForm({ offer, onSave, onCancel }: Props) {
   }
 
   const handleSave = () => {
-    if (!form.position.trim() || !form.contractType || !form.workMode || !form.workLoad) {
-      window.alert('Stanowisko, typ umowy, tryb i wymiar pracy są wymagane')
+    if (!form.position.trim() || !form.companyName.trim()) {
+      window.alert('Stanowisko i nazwa firmy są wymagane')
       return
     }
     onSave({
