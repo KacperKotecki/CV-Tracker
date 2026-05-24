@@ -19,6 +19,13 @@ public class AppDbContext : DbContext
        modelBuilder.Entity<JobOffer>()
             .Property(x => x.Status)
             .HasConversion<string>();
+       modelBuilder.Entity<JobOffer>()
+            .Property(x => x.RequiredSkills)
+            .HasConversion(
+                v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                v => System.Text.Json.JsonSerializer.Deserialize<List<string>>(v,
+                     (System.Text.Json.JsonSerializerOptions?)null) ?? new List<string>()
+            );
 
         modelBuilder.Entity<JobOfferNote>()
             .HasOne<JobOffer>()

@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import type { JobOffer } from "../../models/JobOffer";
+import MatchScoreBadge from './MatchScoreBadge';
 import './StatusCard.css';
 
 interface ApplicationCardProps {
@@ -22,7 +23,7 @@ export default function ApplicationCard({ offer }: ApplicationCardProps) {
   return (
     <div className="status-card"
         draggable={true}
-        onClick={() => navigate(`/offer/${offer.id}`)}
+        onClick={() => navigate(`/?id=${offer.id}`)}
         onDragStart={(e) => {
             e.dataTransfer.setData('offerId', String(offer.id))
             setTimeout(() => {
@@ -45,6 +46,7 @@ export default function ApplicationCard({ offer }: ApplicationCardProps) {
         {offer.contractType && <span className="tag">{offer.contractType}</span>}
         {offer.workMode && <span className="tag">{offer.workMode}</span>}
       </div>
+      <MatchScoreBadge score={offer.matchScore} />
     </div>
   );
 }

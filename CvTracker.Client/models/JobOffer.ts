@@ -9,7 +9,8 @@ export interface JobOffer {
   workLoad: string
   companyName: string | null
   location: string | null
-  skills: string | null
+  requiredSkills: string[]
+  matchScore: number | null
   sourceUrl?: string | null
   status: ApplicationStatus
   salaryMin: number | null

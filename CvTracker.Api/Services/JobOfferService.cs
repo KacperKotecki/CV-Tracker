@@ -15,16 +15,22 @@ public class JobOfferService : IJobOfferService
 
     public async Task<ICollection<JobOffer>> GetAllAsync()
     {
-        return await _context.JobOffers
+        var offers = await _context.JobOffers
             .Include(j => j.Notes)
             .ToListAsync();
+        foreach (var o in offers)
+            o.MatchScore = await ComputeMatchScoreAsync(o.RequiredSkills);
+        return offers;
     }
 
     public async Task<JobOffer?> GetByIdAsync(int id)
     {
-        return await _context.JobOffers
+        var jobOffer = await _context.JobOffers
             .Include(j => j.Notes)
             .FirstOrDefaultAsync(j => j.Id == id);
+        if (jobOffer != null)
+            jobOffer.MatchScore = await ComputeMatchScoreAsync(jobOffer.RequiredSkills);
+        return jobOffer;
     }
 
     public async Task<JobOffer> CreateAsync(JobOfferDto dto)
@@ -41,7 +47,7 @@ public class JobOfferService : IJobOfferService
             WorkMode = dto.WorkMode,
             CompanyName = dto.CompanyName,
             Location = dto.Location,
-            Skills = dto.Skills,
+            RequiredSkills = dto.RequiredSkills,
             SourceUrl = dto.SourceUrl,
             Status = dto.Status,
             SalaryMin = dto.SalaryMin,
@@ -74,7 +80,7 @@ public class JobOfferService : IJobOfferService
         jobOffer.WorkMode = dto.WorkMode;
         jobOffer.CompanyName = dto.CompanyName;
         jobOffer.Location = dto.Location;
-        jobOffer.Skills = dto.Skills;
+        jobOffer.RequiredSkills = dto.RequiredSkills;
         jobOffer.SourceUrl = dto.SourceUrl;
         jobOffer.Status = dto.Status;
         jobOffer.SalaryMin = dto.SalaryMin;
@@ -137,5 +143,15 @@ public class JobOfferService : IJobOfferService
         _context.JobOfferNotes.Remove(note);
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    private async Task<int?> ComputeMatchScoreAsync(List<string> requiredSkills)
+    {
+        if (requiredSkills.Count == 0) return null;
+        var profileSkills = await _context.UserSkills
+            .Select(s => s.SkillName.ToLower())
+            .ToListAsync();
+        var matched = requiredSkills.Count(r => profileSkills.Contains(r.ToLower()));
+        return (int)Math.Round((double)matched / requiredSkills.Count * 100);
     }
 }
