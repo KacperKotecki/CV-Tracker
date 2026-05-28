@@ -10,7 +10,7 @@ public class ProfileController(AppDbContext db, IWebHostEnvironment env) : Contr
     private static readonly string[] AllowedAvatarExtensions = [".jpg", ".jpeg", ".png", ".webp"];
     private static readonly string[] AllowedResumeExtensions = [".pdf", ".doc", ".docx"];
 
-    private static UserProfileDto MapToDto(UserProfile profile, List<UserSkill> skills)
+    private static UserProfileDto MapToDto(UserProfile profile, List<UserTechnology> technologies)
     {
         return new UserProfileDto
         {
@@ -28,12 +28,13 @@ public class ProfileController(AppDbContext db, IWebHostEnvironment env) : Contr
             ResumeUrl = profile.ResumeFileName != null
                 ? $"/uploads/resumes/{profile.ResumeFileName}"
                 : null,
-            Skills = skills.Select(s => new UserSkillDto
+            Skills = technologies.Select(t => new UserTechnologyDto
             {
-                Id = s.Id,
-                Category = s.Category,
-                SkillName = s.SkillName,
-                Proficiency = s.Proficiency,
+                Id = t.Id,
+                TechnologyId = t.TechnologyId,
+                TechnologyName = t.Technology.Name,
+                Category = t.Technology.Category,
+                Proficiency = t.Proficiency,
             }).ToList(),
         };
     }
@@ -42,24 +43,25 @@ public class ProfileController(AppDbContext db, IWebHostEnvironment env) : Contr
     public async Task<ActionResult<UserProfileDto>> Get()
     {
         var profile = await db.UserProfiles.FindAsync(1);
-        var skills = await db.UserSkills.ToListAsync();
+        var technologies = await db.UserTechnologies.Include(ut => ut.Technology).ToListAsync();
 
         if (profile == null)
         {
             return Ok(new UserProfileDto
             {
                 Id = 0,
-                Skills = skills.Select(s => new UserSkillDto
+                Skills = technologies.Select(t => new UserTechnologyDto
                 {
-                    Id = s.Id,
-                    Category = s.Category,
-                    SkillName = s.SkillName,
-                    Proficiency = s.Proficiency,
+                    Id = t.Id,
+                    TechnologyId = t.TechnologyId,
+                    TechnologyName = t.Technology.Name,
+                    Category = t.Technology.Category,
+                    Proficiency = t.Proficiency,
                 }).ToList(),
             });
         }
 
-        return Ok(MapToDto(profile, skills));
+        return Ok(MapToDto(profile, technologies));
     }
 
     [HttpPut]
@@ -85,8 +87,8 @@ public class ProfileController(AppDbContext db, IWebHostEnvironment env) : Contr
 
         await db.SaveChangesAsync();
 
-        var skills = await db.UserSkills.ToListAsync();
-        return Ok(MapToDto(profile, skills));
+        var technologies = await db.UserTechnologies.Include(ut => ut.Technology).ToListAsync();
+        return Ok(MapToDto(profile, technologies));
     }
 
     [HttpPost("avatar")]
@@ -154,30 +156,32 @@ public class ProfileController(AppDbContext db, IWebHostEnvironment env) : Contr
     }
 
     [HttpPut("skills")]
-    public async Task<ActionResult<List<UserSkillDto>>> UpdateSkills(
-        [FromBody] UpdateUserSkillsRequest req)
+    public async Task<ActionResult<List<UserTechnologyDto>>> UpdateSkills(
+        [FromBody] UpdateUserTechnologiesRequest req)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var existing = await db.UserSkills.ToListAsync();
-        db.UserSkills.RemoveRange(existing);
+        var existing = await db.UserTechnologies.ToListAsync();
+        db.UserTechnologies.RemoveRange(existing);
 
-        db.UserSkills.AddRange(req.Skills.Select(s => new UserSkill
+        db.UserTechnologies.AddRange(req.Technologies.Select(t => new UserTechnology
         {
-            Category = s.Category,
-            SkillName = s.SkillName,
-            Proficiency = s.Proficiency,
+            TechnologyId = t.TechnologyId,
+            Proficiency = t.Proficiency,
         }));
 
         await db.SaveChangesAsync();
 
-        return Ok(db.UserSkills.Select(s => new UserSkillDto
+        var saved = await db.UserTechnologies.Include(ut => ut.Technology).ToListAsync();
+
+        return Ok(saved.Select(t => new UserTechnologyDto
         {
-            Id = s.Id,
-            Category = s.Category,
-            SkillName = s.SkillName,
-            Proficiency = s.Proficiency,
+            Id = t.Id,
+            TechnologyId = t.TechnologyId,
+            TechnologyName = t.Technology.Name,
+            Category = t.Technology.Category,
+            Proficiency = t.Proficiency,
         }).ToList());
     }
 }

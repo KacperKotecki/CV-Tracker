@@ -1,19 +1,21 @@
 import { useState } from 'react'
-import type { UserSkill } from '../../models/UserSkill'
-import { SKILL_CATEGORIES } from '../data/skillCategories'
+import type { UserTechnology } from '../../models/UserSkill'
+import type { TechnologyCategory } from '../../models/Technology'
 import './SkillsCard.css'
 
 interface SkillsCardProps {
-  skills: UserSkill[]
+  skills: UserTechnology[]
+  categories: TechnologyCategory[]
   isEditing: boolean
   onEditToggle: () => void
-  onSkillToggle: (category: string, skillName: string) => Promise<void>
-  onProficiencyChange: (category: string, skillName: string, proficiency: number) => Promise<void>
+  onSkillToggle: (technologyId: number) => Promise<void>
+  onProficiencyChange: (technologyId: number, proficiency: number) => Promise<void>
   onCancel: () => void
 }
 
 export default function SkillsCard({
   skills,
+  categories,
   isEditing,
   onEditToggle,
   onSkillToggle,
@@ -34,14 +36,14 @@ export default function SkillsCard({
     })
   }
 
-  const getSkill = (category: string, skillName: string): UserSkill | undefined =>
-    skills.find(s => s.category === category && s.skillName === skillName)
+  const getSkill = (technologyId: number): UserTechnology | undefined =>
+    skills.find(s => s.technologyId === technologyId)
 
-  const isSelected = (category: string, skillName: string): boolean =>
-    getSkill(category, skillName) !== undefined
+  const isSelected = (technologyId: number): boolean =>
+    getSkill(technologyId) !== undefined
 
-  const getProficiency = (category: string, skillName: string): number =>
-    getSkill(category, skillName)?.proficiency ?? 3
+  const getProficiency = (technologyId: number): number =>
+    getSkill(technologyId)?.proficiency ?? 3
 
   if (!isEditing) {
     return (
@@ -62,8 +64,8 @@ export default function SkillsCard({
         ) : (
           <div className="skills-card__pills">
             {skills.map(skill => (
-              <div key={`${skill.category}:${skill.skillName}`} className="skills-card__pill">
-                <span className="skills-card__pill-name">{skill.skillName}</span>
+              <div key={skill.technologyId} className="skills-card__pill">
+                <span className="skills-card__pill-name">{skill.technologyName}</span>
                 <span className="skills-card__dots">
                   {Array.from({ length: 5 }, (_, i) => (
                     <span
@@ -89,19 +91,19 @@ export default function SkillsCard({
         </button>
       </div>
       <div className="skills-card__editor">
-        {SKILL_CATEGORIES.map(cat => {
-          const isExpanded = expandedCategories.has(cat.name)
-          const selectedInCategory = skills.filter(s => s.category === cat.name).length
+        {categories.map(cat => {
+          const isExpanded = expandedCategories.has(cat.category)
+          const selectedInCategory = skills.filter(s => s.category === cat.category).length
 
           return (
-            <div key={cat.name} className="skills-card__category">
+            <div key={cat.category} className="skills-card__category">
               <button
                 className="skills-card__category-header"
-                onClick={() => toggleCategory(cat.name)}
+                onClick={() => toggleCategory(cat.category)}
                 type="button"
               >
                 <span>
-                  {cat.name}
+                  {cat.category}
                   {selectedInCategory > 0 && (
                     <span className="skills-card__category-count"> ({selectedInCategory})</span>
                   )}
@@ -112,18 +114,18 @@ export default function SkillsCard({
               </button>
               {isExpanded && (
                 <div className="skills-card__category-body">
-                  {cat.skills.map(skillName => {
-                    const active = isSelected(cat.name, skillName)
-                    const proficiency = getProficiency(cat.name, skillName)
+                  {cat.technologies.map(tech => {
+                    const active = isSelected(tech.id)
+                    const proficiency = getProficiency(tech.id)
 
                     return (
                       <button
-                        key={skillName}
+                        key={tech.id}
                         type="button"
                         className={`skills-card__skill-row${active ? ' skills-card__skill-row--active' : ''}`}
-                        onClick={() => { void onSkillToggle(cat.name, skillName) }}
+                        onClick={() => { void onSkillToggle(tech.id) }}
                       >
-                        <span>{skillName}</span>
+                        <span>{tech.name}</span>
                         {active && (
                           <span className="skills-card__dots" onClick={e => e.stopPropagation()}>
                             {Array.from({ length: 5 }, (_, i) => (
@@ -132,7 +134,7 @@ export default function SkillsCard({
                                 className={`skills-card__skill-dot${i < proficiency ? ' skills-card__skill-dot--filled' : ''}`}
                                 onClick={e => {
                                   e.stopPropagation()
-                                  void onProficiencyChange(cat.name, skillName, i + 1)
+                                  void onProficiencyChange(tech.id, i + 1)
                                 }}
                               />
                             ))}

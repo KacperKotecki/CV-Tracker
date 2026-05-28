@@ -1,4 +1,4 @@
-import type { UserSkill } from './UserSkill'
+import type { UserTechnology } from './UserSkill'
 
 export interface UserProfile {
   id: number
@@ -11,7 +11,7 @@ export interface UserProfile {
   avatarUrl: string | null
   resumeFileName: string | null
   resumeUrl: string | null
-  skills: UserSkill[]
+  skills: UserTechnology[]
 }
 
 export interface UpdateUserProfileRequest {

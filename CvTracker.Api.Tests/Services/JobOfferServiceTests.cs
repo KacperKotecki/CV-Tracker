@@ -364,4 +364,168 @@ public class JobOfferServiceTests : IDisposable
         // Assert
         result.Should().BeFalse();
     }
+
+    // ── Match score ────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task ComputeMatchScore_NoRequiredSkills_ReturnsNull()
+    {
+        // Arrange
+        var tech = TestBuilders.BuildTechnology(id: 1);
+        _context.Technologies.Add(tech);
+        _context.UserTechnologies.Add(new UserTechnology { TechnologyId = 1, Proficiency = 3 });
+        var offer = TestBuilders.BuildJobOffer(id: 1);
+        _context.JobOffers.Add(offer);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _sut.GetByIdAsync(1);
+
+        // Assert
+        result!.MatchScore.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task ComputeMatchScore_AllSkillsMatch_Returns100()
+    {
+        // Arrange
+        var tech = TestBuilders.BuildTechnology(id: 1);
+        _context.Technologies.Add(tech);
+        await _context.SaveChangesAsync();
+
+        _context.UserTechnologies.Add(new UserTechnology { TechnologyId = tech.Id, Proficiency = 3 });
+        var offer = TestBuilders.BuildJobOffer(id: 1);
+        _context.JobOffers.Add(offer);
+        await _context.SaveChangesAsync();
+
+        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech.Id });
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _sut.GetByIdAsync(offer.Id);
+
+        // Assert
+        result!.MatchScore.Should().Be(100);
+    }
+
+    [Fact]
+    public async Task ComputeMatchScore_NoSkillsMatch_Returns0()
+    {
+        // Arrange
+        var tech1 = TestBuilders.BuildTechnology(id: 1, name: "C#");
+        var tech2 = TestBuilders.BuildTechnology(id: 2, name: "Java");
+        _context.Technologies.AddRange(tech1, tech2);
+        await _context.SaveChangesAsync();
+
+        // User knows C# but offer requires Java
+        _context.UserTechnologies.Add(new UserTechnology { TechnologyId = tech1.Id, Proficiency = 3 });
+        var offer = TestBuilders.BuildJobOffer(id: 1);
+        _context.JobOffers.Add(offer);
+        await _context.SaveChangesAsync();
+
+        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech2.Id });
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _sut.GetByIdAsync(offer.Id);
+
+        // Assert
+        result!.MatchScore.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task ComputeMatchScore_PartialMatch_ReturnsCorrectPercentage()
+    {
+        // Arrange
+        var tech1 = TestBuilders.BuildTechnology(id: 1, name: "C#");
+        var tech2 = TestBuilders.BuildTechnology(id: 2, name: "Java");
+        _context.Technologies.AddRange(tech1, tech2);
+        await _context.SaveChangesAsync();
+
+        // User knows only C#; offer requires C# and Java
+        _context.UserTechnologies.Add(new UserTechnology { TechnologyId = tech1.Id, Proficiency = 3 });
+        var offer = TestBuilders.BuildJobOffer(id: 1);
+        _context.JobOffers.Add(offer);
+        await _context.SaveChangesAsync();
+
+        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech1.Id });
+        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech2.Id });
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _sut.GetByIdAsync(offer.Id);
+
+        // Assert
+        result!.MatchScore.Should().Be(50);
+    }
+
+    [Fact]
+    public async Task GetAllAsync_PopulatesRequiredSkillIds_FromJoinTable()
+    {
+        // Arrange
+        var tech = TestBuilders.BuildTechnology(id: 1, name: "TypeScript");
+        _context.Technologies.Add(tech);
+        var offer = TestBuilders.BuildJobOffer(id: 1);
+        _context.JobOffers.Add(offer);
+        await _context.SaveChangesAsync();
+
+        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech.Id });
+        await _context.SaveChangesAsync();
+
+        // Act
+        var results = await _sut.GetAllAsync();
+
+        // Assert
+        results.Should().HaveCount(1);
+        results.First().RequiredSkillIds.Should().Contain(tech.Id);
+    }
+
+    [Fact]
+    public async Task CreateAsync_PersistsJobOfferTechnologyRows()
+    {
+        // Arrange
+        var tech = TestBuilders.BuildTechnology(id: 1, name: "Go");
+        _context.Technologies.Add(tech);
+        await _context.SaveChangesAsync();
+
+        var dto = TestBuilders.BuildJobOfferDto(requiredSkillIds: [tech.Id]);
+
+        // Act
+        var created = await _sut.CreateAsync(dto);
+
+        // Assert
+        var joinRows = await _context.JobOfferTechnologies
+            .Where(jt => jt.JobOfferId == created.Id)
+            .ToListAsync();
+        joinRows.Should().HaveCount(1);
+        joinRows[0].TechnologyId.Should().Be(tech.Id);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ReplacesJobOfferTechnologyRows()
+    {
+        // Arrange
+        var tech1 = TestBuilders.BuildTechnology(id: 1, name: "C#");
+        var tech2 = TestBuilders.BuildTechnology(id: 2, name: "Java");
+        _context.Technologies.AddRange(tech1, tech2);
+        var offer = TestBuilders.BuildJobOffer(id: 1);
+        _context.JobOffers.Add(offer);
+        await _context.SaveChangesAsync();
+
+        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech1.Id });
+        await _context.SaveChangesAsync();
+
+        // Now update with tech2 only
+        var dto = TestBuilders.BuildJobOfferDto(requiredSkillIds: [tech2.Id]);
+
+        // Act
+        await _sut.UpdateAsync(offer.Id, dto);
+
+        // Assert
+        var joinRows = await _context.JobOfferTechnologies
+            .Where(jt => jt.JobOfferId == offer.Id)
+            .ToListAsync();
+        joinRows.Should().HaveCount(1);
+        joinRows[0].TechnologyId.Should().Be(tech2.Id);
+    }
 }

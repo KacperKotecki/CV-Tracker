@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 public class ScrapedOfferDto
 {
@@ -7,7 +8,8 @@ public class ScrapedOfferDto
     public string? ContractType { get; set; }
     public string? WorkLoad { get; set; }
     public string? WorkMode { get; set; }
-    public List<string> RequiredSkills { get; set; } = [];
+    [JsonIgnore] public string? Skills { get; set; }
+    public List<int> RequiredSkillIds { get; set; } = [];
     public string? OurRequirements { get; set; }
     public string? WhatWeOffer { get; set; }
     public string? Benefits { get; set; }

@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import type { UserProfile, UpdateUserProfileRequest } from '../../models/UserProfile'
-import type { UserSkill } from '../../models/UserSkill'
-import type { UpdateUserSkillsRequest } from '../../models/UserSkill'
+import type { UserTechnology, UpdateUserTechnologiesRequest } from '../../models/UserSkill'
+import type { TechnologyCategory } from '../../models/Technology'
 import ProfileInfoCard from '../components/ProfileInfoCard'
 import SkillsCard from '../components/SkillsCard'
 import './ProfilePage.css'
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [categories, setCategories] = useState<TechnologyCategory[]>([])
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [isEditingSkills, setIsEditingSkills] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -28,6 +29,12 @@ export default function ProfilePage() {
         setError(err instanceof Error ? err.message : 'Błąd pobierania profilu')
         setLoading(false)
       })
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/technologies')
+      .then(r => r.json())
+      .then((data: TechnologyCategory[]) => setCategories(data))
   }, [])
 
   const handleSaveProfile = async (req: UpdateUserProfileRequest): Promise<void> => {
@@ -51,20 +58,19 @@ export default function ProfilePage() {
     setProfile(prev => prev ? { ...prev, resumeFileName, resumeUrl } : prev)
   }
 
-  const buildSkillsRequest = (updatedSkills: UserSkill[]): UpdateUserSkillsRequest => ({
-    skills: updatedSkills.map(s => ({
-      category: s.category,
-      skillName: s.skillName,
+  const buildSkillsRequest = (updatedSkills: UserTechnology[]): UpdateUserTechnologiesRequest => ({
+    technologies: updatedSkills.map(s => ({
+      technologyId: s.technologyId,
       proficiency: s.proficiency,
     })),
   })
 
-  const handleSkillToggle = async (category: string, skillName: string): Promise<void> => {
+  const handleSkillToggle = async (technologyId: number): Promise<void> => {
     if (!profile) return
-    const exists = profile.skills.find(s => s.category === category && s.skillName === skillName)
-    const updatedSkills: UserSkill[] = exists
-      ? profile.skills.filter(s => !(s.category === category && s.skillName === skillName))
-      : [...profile.skills, { id: 0, category, skillName, proficiency: 3 }]
+    const exists = profile.skills.find(s => s.technologyId === technologyId)
+    const updatedSkills: UserTechnology[] = exists
+      ? profile.skills.filter(s => s.technologyId !== technologyId)
+      : [...profile.skills, { id: 0, technologyId, technologyName: '', category: '', proficiency: 3 }]
 
     setProfile(prev => prev ? { ...prev, skills: updatedSkills } : prev)
 
@@ -75,19 +81,18 @@ export default function ProfilePage() {
       body: JSON.stringify(buildSkillsRequest(updatedSkills)),
     })
     if (r.ok && reqId === skillsRequestCounter.current) {
-      const saved = await r.json() as UserSkill[]
+      const saved = await r.json() as UserTechnology[]
       setProfile(prev => prev ? { ...prev, skills: saved } : prev)
     }
   }
 
   const handleProficiencyChange = async (
-    category: string,
-    skillName: string,
+    technologyId: number,
     proficiency: number,
   ): Promise<void> => {
     if (!profile) return
     const updatedSkills = profile.skills.map(s =>
-      s.category === category && s.skillName === skillName ? { ...s, proficiency } : s,
+      s.technologyId === technologyId ? { ...s, proficiency } : s,
     )
 
     setProfile(prev => prev ? { ...prev, skills: updatedSkills } : prev)
@@ -99,7 +104,7 @@ export default function ProfilePage() {
       body: JSON.stringify(buildSkillsRequest(updatedSkills)),
     })
     if (r.ok && reqId === skillsRequestCounter.current) {
-      const saved = await r.json() as UserSkill[]
+      const saved = await r.json() as UserTechnology[]
       setProfile(prev => prev ? { ...prev, skills: saved } : prev)
     }
   }
@@ -134,6 +139,7 @@ export default function ProfilePage() {
         />
         <SkillsCard
           skills={profile?.skills ?? []}
+          categories={categories}
           isEditing={isEditingSkills}
           onEditToggle={() => setIsEditingSkills(v => !v)}
           onSkillToggle={handleSkillToggle}

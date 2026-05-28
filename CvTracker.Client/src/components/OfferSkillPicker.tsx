@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import { SKILL_CATEGORIES } from '../data/skillCategories'
+import type { TechnologyCategory } from '../../models/Technology'
 import './OfferSkillPicker.css'
 
 interface OfferSkillPickerProps {
-  value: string[]
-  onChange: (skills: string[]) => void
+  categories: TechnologyCategory[]
+  value: number[]
+  onChange: (ids: number[]) => void
 }
 
-export default function OfferSkillPicker({ value, onChange }: OfferSkillPickerProps) {
+export default function OfferSkillPicker({ categories, value, onChange }: OfferSkillPickerProps) {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
 
   const toggleCategory = (name: string) => {
@@ -19,11 +20,19 @@ export default function OfferSkillPicker({ value, onChange }: OfferSkillPickerPr
     })
   }
 
-  const toggleSkill = (skillName: string) => {
-    if (value.includes(skillName)) {
-      onChange(value.filter(s => s !== skillName))
+  const toggleSkill = (id: number) => {
+    if (value.includes(id)) {
+      onChange(value.filter(v => v !== id))
     } else {
-      onChange([...value, skillName])
+      onChange([...value, id])
+    }
+  }
+
+  // Build a flat map id→name for pill display
+  const nameById = new Map<number, string>()
+  for (const cat of categories) {
+    for (const tech of cat.technologies) {
+      nameById.set(tech.id, tech.name)
     }
   }
 
@@ -31,27 +40,27 @@ export default function OfferSkillPicker({ value, onChange }: OfferSkillPickerPr
     <div className="offer-skill-picker">
       {value.length > 0 && (
         <div className="offer-skill-picker__pills">
-          {value.map(s => (
-            <span key={s} className="offer-skill-picker__pill">
-              {s}
-              <button type="button" className="offer-skill-picker__pill-remove" onClick={() => toggleSkill(s)}>×</button>
+          {value.map(id => (
+            <span key={id} className="offer-skill-picker__pill">
+              {nameById.get(id) ?? String(id)}
+              <button type="button" className="offer-skill-picker__pill-remove" onClick={() => toggleSkill(id)}>×</button>
             </span>
           ))}
         </div>
       )}
       <div className="offer-skill-picker__categories">
-        {SKILL_CATEGORIES.map(cat => {
-          const isExpanded = expandedCategories.has(cat.name)
-          const selectedCount = cat.skills.filter(s => value.includes(s)).length
+        {categories.map(cat => {
+          const isExpanded = expandedCategories.has(cat.category)
+          const selectedCount = cat.technologies.filter(t => value.includes(t.id)).length
           return (
-            <div key={cat.name} className="offer-skill-picker__category">
+            <div key={cat.category} className="offer-skill-picker__category">
               <button
                 type="button"
                 className="offer-skill-picker__category-header"
-                onClick={() => toggleCategory(cat.name)}
+                onClick={() => toggleCategory(cat.category)}
               >
                 <span>
-                  {cat.name}
+                  {cat.category}
                   {selectedCount > 0 && (
                     <span className="offer-skill-picker__category-count"> ({selectedCount})</span>
                   )}
@@ -60,14 +69,14 @@ export default function OfferSkillPicker({ value, onChange }: OfferSkillPickerPr
               </button>
               {isExpanded && (
                 <div className="offer-skill-picker__category-body">
-                  {cat.skills.map(skillName => (
+                  {cat.technologies.map(tech => (
                     <button
-                      key={skillName}
+                      key={tech.id}
                       type="button"
-                      className={`offer-skill-picker__skill-btn${value.includes(skillName) ? ' offer-skill-picker__skill-btn--active' : ''}`}
-                      onClick={() => toggleSkill(skillName)}
+                      className={`offer-skill-picker__skill-btn${value.includes(tech.id) ? ' offer-skill-picker__skill-btn--active' : ''}`}
+                      onClick={() => toggleSkill(tech.id)}
                     >
-                      {skillName}
+                      {tech.name}
                     </button>
                   ))}
                 </div>
