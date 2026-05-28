@@ -15,21 +15,51 @@ public class JobOfferService : IJobOfferService
 
     public async Task<ICollection<JobOffer>> GetAllAsync()
     {
+        var userTechIds = await _context.UserTechnologies
+            .Select(ut => ut.TechnologyId)
+            .ToListAsync();
+        var userTechIdSet = new HashSet<int>(userTechIds);
+
         var offers = await _context.JobOffers
             .Include(j => j.Notes)
+            .Include(j => j.RequiredTechnologies)
+                .ThenInclude(t => t.Technology)
             .ToListAsync();
-        foreach (var o in offers)
-            o.MatchScore = await ComputeMatchScoreAsync(o.RequiredSkills);
+
+        foreach (var offer in offers)
+        {
+            offer.RequiredSkillIds = offer.RequiredTechnologies
+                .Select(t => t.TechnologyId).ToList();
+            offer.RequiredSkillNames = offer.RequiredTechnologies
+                .Select(t => t.Technology.Name).ToList();
+            offer.MatchScore = ComputeMatchScore(offer.RequiredSkillIds, userTechIdSet);
+        }
+
         return offers;
     }
 
     public async Task<JobOffer?> GetByIdAsync(int id)
     {
+        var userTechIds = await _context.UserTechnologies
+            .Select(ut => ut.TechnologyId)
+            .ToListAsync();
+        var userTechIdSet = new HashSet<int>(userTechIds);
+
         var jobOffer = await _context.JobOffers
             .Include(j => j.Notes)
+            .Include(j => j.RequiredTechnologies)
+                .ThenInclude(t => t.Technology)
             .FirstOrDefaultAsync(j => j.Id == id);
+
         if (jobOffer != null)
-            jobOffer.MatchScore = await ComputeMatchScoreAsync(jobOffer.RequiredSkills);
+        {
+            jobOffer.RequiredSkillIds = jobOffer.RequiredTechnologies
+                .Select(t => t.TechnologyId).ToList();
+            jobOffer.RequiredSkillNames = jobOffer.RequiredTechnologies
+                .Select(t => t.Technology.Name).ToList();
+            jobOffer.MatchScore = ComputeMatchScore(jobOffer.RequiredSkillIds, userTechIdSet);
+        }
+
         return jobOffer;
     }
 
@@ -47,7 +77,6 @@ public class JobOfferService : IJobOfferService
             WorkMode = dto.WorkMode,
             CompanyName = dto.CompanyName,
             Location = dto.Location,
-            RequiredSkills = dto.RequiredSkills,
             SourceUrl = dto.SourceUrl,
             Status = dto.Status,
             SalaryMin = dto.SalaryMin,
@@ -62,12 +91,28 @@ public class JobOfferService : IJobOfferService
 
         _context.JobOffers.Add(jobOffer);
         await _context.SaveChangesAsync();
+
+        foreach (var techId in dto.RequiredSkillIds)
+        {
+            _context.JobOfferTechnologies.Add(new JobOfferTechnology
+            {
+                JobOfferId = jobOffer.Id,
+                TechnologyId = techId,
+            });
+        }
+
+        if (dto.RequiredSkillIds.Count > 0)
+            await _context.SaveChangesAsync();
+
         return jobOffer;
     }
 
     public async Task<bool> UpdateAsync(int id, JobOfferDto dto)
     {
-        var jobOffer = await GetByIdAsync(id);
+        var jobOffer = await _context.JobOffers
+            .Include(j => j.RequiredTechnologies)
+            .FirstOrDefaultAsync(j => j.Id == id);
+
         if (jobOffer == null) return false;
 
         var followUpDate = dto.FollowUpDate;
@@ -80,7 +125,6 @@ public class JobOfferService : IJobOfferService
         jobOffer.WorkMode = dto.WorkMode;
         jobOffer.CompanyName = dto.CompanyName;
         jobOffer.Location = dto.Location;
-        jobOffer.RequiredSkills = dto.RequiredSkills;
         jobOffer.SourceUrl = dto.SourceUrl;
         jobOffer.Status = dto.Status;
         jobOffer.SalaryMin = dto.SalaryMin;
@@ -92,13 +136,23 @@ public class JobOfferService : IJobOfferService
         jobOffer.SentCvVersion = dto.SentCvVersion;
         jobOffer.RejectionReason = dto.RejectionReason;
 
+        _context.JobOfferTechnologies.RemoveRange(jobOffer.RequiredTechnologies);
+        foreach (var techId in dto.RequiredSkillIds)
+        {
+            _context.JobOfferTechnologies.Add(new JobOfferTechnology
+            {
+                JobOfferId = jobOffer.Id,
+                TechnologyId = techId,
+            });
+        }
+
         await _context.SaveChangesAsync();
         return true;
     }
 
     public async Task<bool> UpdateStatusAsync(int id, ApplicationStatus status)
     {
-        var jobOffer = await GetByIdAsync(id);
+        var jobOffer = await _context.JobOffers.FirstOrDefaultAsync(j => j.Id == id);
         if (jobOffer == null) return false;
 
         jobOffer.Status = status;
@@ -145,13 +199,10 @@ public class JobOfferService : IJobOfferService
         return true;
     }
 
-    private async Task<int?> ComputeMatchScoreAsync(List<string> requiredSkills)
+    private static int? ComputeMatchScore(List<int> requiredIds, HashSet<int> userIds)
     {
-        if (requiredSkills.Count == 0) return null;
-        var profileSkills = await _context.UserSkills
-            .Select(s => s.SkillName.ToLower())
-            .ToListAsync();
-        var matched = requiredSkills.Count(r => profileSkills.Contains(r.ToLower()));
-        return (int)Math.Round((double)matched / requiredSkills.Count * 100);
+        if (requiredIds.Count == 0) return null;
+        var matched = requiredIds.Count(id => userIds.Contains(id));
+        return (int)Math.Round((double)matched / requiredIds.Count * 100);
     }
 }

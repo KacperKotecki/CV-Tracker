@@ -10,5 +10,5 @@ public class UserProfileDto
     public string? AvatarUrl { get; set; }
     public string? ResumeFileName { get; set; }
     public string? ResumeUrl { get; set; }
-    public List<UserSkillDto> Skills { get; set; } = [];
+    public List<UserTechnologyDto> Skills { get; set; } = [];
 }

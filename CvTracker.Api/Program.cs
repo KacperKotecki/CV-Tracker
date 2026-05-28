@@ -47,8 +47,20 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IJobOfferService, JobOfferService>();
+builder.Services.AddScoped<ISkillSeedingService, SkillSeedingService>();
+builder.Services.AddSingleton<ISkillNormalizationService, SkillNormalizationService>();
 
 var app = builder.Build();
+
+// Run seeding then initialize normalization cache
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<ISkillSeedingService>();
+    await seeder.SeedAsync();
+}
+
+var normalizationService = app.Services.GetRequiredService<ISkillNormalizationService>();
+await normalizationService.InitializeAsync();
 
 if (app.Environment.IsDevelopment())
 {
@@ -69,3 +81,6 @@ Directory.CreateDirectory(Path.Combine(wwwroot, "uploads", "resumes"));
 app.MapControllers();
 
 app.Run();
+
+// Expose Program to the integration-test project
+public partial class Program { }

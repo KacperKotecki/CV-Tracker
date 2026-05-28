@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import type { JobOffer } from '../../models/JobOffer'
 import type { JobOfferNote } from '../../models/JobOfferNote'
 import type { ApplicationStatus } from '../../models/ApplicationStatus'
+import type { TechnologyCategory } from '../../models/Technology'
 import OfferListPanel from '../components/OfferListPanel'
 import OfferDetailPanel from '../components/OfferDetailPanel'
 import './OffersPage.css'
@@ -11,6 +12,7 @@ type PanelMode = 'empty' | 'detail' | 'edit' | 'add'
 
 export default function OffersPage() {
   const [offers, setOffers] = useState<JobOffer[]>([])
+  const [categories, setCategories] = useState<TechnologyCategory[]>([])
   const [search, setSearch] = useState('')
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -24,6 +26,12 @@ export default function OffersPage() {
     fetch('/api/jobapplications')
       .then(r => r.json())
       .then(setOffers)
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/technologies')
+      .then(r => r.json())
+      .then((data: TechnologyCategory[]) => setCategories(data))
   }, [])
 
   const handleSelectOffer = (id: number) => {
@@ -151,6 +159,7 @@ export default function OffersPage() {
           mode={panelMode}
           offer={selectedOffer}
           notes={selectedOffer?.notes ?? []}
+          categories={categories}
           onEdit={handleEditOffer}
           onSave={handleSaveOffer}
           onCancel={handleCancelEdit}

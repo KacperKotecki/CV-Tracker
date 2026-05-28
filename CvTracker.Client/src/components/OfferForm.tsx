@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { JobOffer } from '../../models/JobOffer'
+import type { TechnologyCategory } from '../../models/Technology'
 import { applicationStatusOptions, type ApplicationStatus } from '../../models/ApplicationStatus'
 import { contractTypeOptions } from '../../models/ContractType'
 import { workModeOptions } from '../../models/WorkMode'
@@ -15,7 +16,7 @@ interface ScrapedOffer {
   contractType: string | null
   workMode: string | null
   workLoad: string | null
-  requiredSkills: string[]
+  requiredSkillIds: number[]
   companyName: string | null
   location: string | null
 }
@@ -27,6 +28,7 @@ function toDateTimeLocal(value: string | null | undefined): string {
 
 interface Props {
   offer: JobOffer | null
+  categories: TechnologyCategory[]
   onSave: (dto: Partial<JobOffer>) => void
   onCancel: () => void
 }
@@ -45,7 +47,7 @@ function makeEmptyForm() {
     companyName: '',
     location: '',
     sourceUrl: '',
-    requiredSkills: [] as string[],
+    requiredSkillIds: [] as number[],
     appliedAt,
     followUpDate: '',
     recruiterName: '',
@@ -56,7 +58,7 @@ function makeEmptyForm() {
   }
 }
 
-export default function OfferForm({ offer, onSave, onCancel }: Props) {
+export default function OfferForm({ offer, categories, onSave, onCancel }: Props) {
   const [form, setForm] = useState(makeEmptyForm)
   const [offerUrl, setOfferUrl] = useState('')
   const [isScraping, setIsScraping] = useState(false)
@@ -73,7 +75,7 @@ export default function OfferForm({ offer, onSave, onCancel }: Props) {
         companyName:      offer.companyName       ?? '',
         location:         offer.location          ?? '',
         sourceUrl:        offer.sourceUrl         ?? '',
-        requiredSkills:   offer.requiredSkills     ?? [],
+        requiredSkillIds: offer.requiredSkillIds  ?? [],
         appliedAt:        toDateTimeLocal(offer.appliedAt),
         followUpDate:     toDateTimeLocal(offer.followUpDate),
         recruiterName:    offer.recruiterName     ?? '',
@@ -104,16 +106,16 @@ export default function OfferForm({ offer, onSave, onCancel }: Props) {
       const data: ScrapedOffer = await r.json()
       setForm(prev => ({
         ...prev,
-        position:     data.position     ?? prev.position,
-        salaryMin:    data.salaryMin    != null ? String(data.salaryMin) : prev.salaryMin,
-        salaryMax:    data.salaryMax    != null ? String(data.salaryMax) : prev.salaryMax,
-        contractType: data.contractType ?? prev.contractType,
-        workMode:     data.workMode     ?? prev.workMode,
-        workLoad:     data.workLoad     ?? prev.workLoad,
-        companyName:  data.companyName  ?? prev.companyName,
-        location:     data.location     ?? prev.location,
-        requiredSkills: data.requiredSkills?.length ? data.requiredSkills : prev.requiredSkills,
-        sourceUrl:    offerUrl,
+        position:        data.position        ?? prev.position,
+        salaryMin:       data.salaryMin       != null ? String(data.salaryMin) : prev.salaryMin,
+        salaryMax:       data.salaryMax       != null ? String(data.salaryMax) : prev.salaryMax,
+        contractType:    data.contractType    ?? prev.contractType,
+        workMode:        data.workMode        ?? prev.workMode,
+        workLoad:        data.workLoad        ?? prev.workLoad,
+        companyName:     data.companyName     ?? prev.companyName,
+        location:        data.location        ?? prev.location,
+        requiredSkillIds: data.requiredSkillIds?.length ? data.requiredSkillIds : prev.requiredSkillIds,
+        sourceUrl:       offerUrl,
       }))
     } catch {
       window.alert('Błąd połączenia z serwerem.')
@@ -138,7 +140,7 @@ export default function OfferForm({ offer, onSave, onCancel }: Props) {
       companyName:      form.companyName      || null,
       location:         form.location         || null,
       sourceUrl:        form.sourceUrl        || null,
-      requiredSkills:   form.requiredSkills,
+      requiredSkillIds: form.requiredSkillIds,
       appliedAt:        form.appliedAt        || null,
       followUpDate:     form.followUpDate     || null,
       recruiterName:    form.recruiterName    || null,
@@ -203,7 +205,7 @@ export default function OfferForm({ offer, onSave, onCancel }: Props) {
           <input className="form-field" type="text" value={form.recruiterName} onChange={e => setForm({ ...form, recruiterName: e.target.value })} placeholder="Imię rekrutera" />
           <input className="form-field" type="text" value={form.recruiterContact} onChange={e => setForm({ ...form, recruiterContact: e.target.value })} placeholder="Kontakt do rekrutera" />
           <div className="offer-form__col-full">
-            <OfferSkillPicker value={form.requiredSkills} onChange={v => setForm({ ...form, requiredSkills: v })} />
+            <OfferSkillPicker categories={categories} value={form.requiredSkillIds} onChange={v => setForm({ ...form, requiredSkillIds: v })} />
           </div>
           <div className="offer-form__col-full">
             <label className="offer-form__label">Data aplikacji</label>

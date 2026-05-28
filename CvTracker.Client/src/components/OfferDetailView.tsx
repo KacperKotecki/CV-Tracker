@@ -21,7 +21,7 @@ function formatDate(value: string | null): string {
 
 export default function OfferDetailView({ offer, notes, onEdit, onStatusChange, onAddNote, onDeleteNote }: Props) {
   const salary = salaryRange(offer)
-  const skills = offer.requiredSkills ?? []
+  const skills = offer.requiredSkillNames ?? []
 
   return (
     <div className="offer-detail-view">

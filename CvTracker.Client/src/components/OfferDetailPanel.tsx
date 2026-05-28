@@ -1,6 +1,7 @@
 import type { JobOffer } from '../../models/JobOffer'
 import type { JobOfferNote } from '../../models/JobOfferNote'
 import type { ApplicationStatus } from '../../models/ApplicationStatus'
+import type { TechnologyCategory } from '../../models/Technology'
 import OfferDetailView from './OfferDetailView'
 import OfferForm from './OfferForm'
 import './OfferDetailPanel.css'
@@ -11,6 +12,7 @@ interface Props {
   mode: PanelMode
   offer: JobOffer | null
   notes: JobOfferNote[]
+  categories: TechnologyCategory[]
   onEdit: () => void
   onSave: (dto: Partial<JobOffer>) => void
   onCancel: () => void
@@ -23,6 +25,7 @@ export default function OfferDetailPanel({
   mode,
   offer,
   notes,
+  categories,
   onEdit,
   onSave,
   onCancel,
@@ -41,7 +44,7 @@ export default function OfferDetailPanel({
   if (mode === 'add') {
     return (
       <div className="offer-detail-panel">
-        <OfferForm offer={null} onSave={onSave} onCancel={onCancel} />
+        <OfferForm offer={null} categories={categories} onSave={onSave} onCancel={onCancel} />
       </div>
     )
   }
@@ -49,7 +52,7 @@ export default function OfferDetailPanel({
   if (mode === 'edit' && offer) {
     return (
       <div className="offer-detail-panel">
-        <OfferForm offer={offer} onSave={onSave} onCancel={onCancel} />
+        <OfferForm offer={offer} categories={categories} onSave={onSave} onCancel={onCancel} />
       </div>
     )
   }

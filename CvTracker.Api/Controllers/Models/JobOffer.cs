@@ -14,7 +14,6 @@ public class JobOffer
     public string? CompanyName { get; set; }
     public string? Location { get; set; }
 
-    public List<string> RequiredSkills { get; set; } = [];
     [NotMapped] public int? MatchScore { get; set; }
 
     [Url]
@@ -32,4 +31,8 @@ public class JobOffer
     public string? RejectionReason { get; set; }
 
     public ICollection<JobOfferNote> Notes { get; set; } = [];
+    public ICollection<JobOfferTechnology> RequiredTechnologies { get; set; } = [];
+
+    [NotMapped] public List<int> RequiredSkillIds { get; set; } = [];
+    [NotMapped] public List<string> RequiredSkillNames { get; set; } = [];
 }

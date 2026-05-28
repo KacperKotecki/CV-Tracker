@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using CvTracker.Api.Services;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -12,15 +13,18 @@ public class ScrapeController : ControllerBase
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IConfiguration _configuration;
     private readonly ILogger<ScrapeController> _logger;
+    private readonly ISkillNormalizationService _normalizationService;
 
     public ScrapeController(
         IHttpClientFactory httpClientFactory,
         IConfiguration configuration,
-        ILogger<ScrapeController> logger)
+        ILogger<ScrapeController> logger,
+        ISkillNormalizationService normalizationService)
     {
         _httpClientFactory = httpClientFactory;
         _configuration = configuration;
         _logger = logger;
+        _normalizationService = normalizationService;
     }
 
     [HttpPost]
@@ -85,6 +89,18 @@ public class ScrapeController : ControllerBase
 
         if (result is null)
             return StatusCode(500, "AI nie zwróciło poprawnych danych.");
+
+        if (!string.IsNullOrWhiteSpace(result.Skills))
+        {
+            var skillStrings = result.Skills.Split(',',
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            result.RequiredSkillIds = skillStrings
+                .Select(s => _normalizationService.Resolve(s))
+                .Where(id => id.HasValue)
+                .Select(id => id!.Value)
+                .Distinct()
+                .ToList();
+        }
 
         return Ok(result);
     }

@@ -22,7 +22,8 @@ public static class TestBuilders
 
     public static JobOfferDto BuildJobOfferDto(
         string position = "Software Engineer",
-        ApplicationStatus status = ApplicationStatus.Draft)
+        ApplicationStatus status = ApplicationStatus.Draft,
+        List<int>? requiredSkillIds = null)
     {
         return new JobOfferDto
         {
@@ -30,7 +31,8 @@ public static class TestBuilders
             ContractType = ContractType.B2B,
             WorkLoad = WorkLoad.FullTime,
             WorkMode = WorkMode.Remote,
-            Status = status
+            Status = status,
+            RequiredSkillIds = requiredSkillIds ?? [],
         };
     }
 
@@ -42,6 +44,32 @@ public static class TestBuilders
         {
             Content = content,
             EventDate = eventDate ?? DateTimeOffset.UtcNow
+        };
+    }
+
+    public static Technology BuildTechnology(
+        int id = 1,
+        string name = "C#",
+        string category = "Programming languages")
+    {
+        return new Technology
+        {
+            Id = id,
+            Name = name,
+            Category = category,
+        };
+    }
+
+    public static TechnologyAlias BuildTechnologyAlias(
+        int id = 1,
+        string alias = "c#",
+        int technologyId = 1)
+    {
+        return new TechnologyAlias
+        {
+            Id = id,
+            Alias = alias,
+            TechnologyId = technologyId,
         };
     }
 }

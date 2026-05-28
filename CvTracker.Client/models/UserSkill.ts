@@ -1,16 +1,16 @@
-export interface UserSkill {
+export interface UserTechnology {
   id: number
+  technologyId: number
+  technologyName: string
   category: string
-  skillName: string
   proficiency: number
 }
 
-export interface SkillItemRequest {
-  category: string
-  skillName: string
+export interface UserTechnologyItemRequest {
+  technologyId: number
   proficiency: number
 }
 
-export interface UpdateUserSkillsRequest {
-  skills: SkillItemRequest[]
+export interface UpdateUserTechnologiesRequest {
+  technologies: UserTechnologyItemRequest[]
 }
