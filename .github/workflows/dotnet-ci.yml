@@ -1,9 +1,9 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
+    branches: [main]
+  push:
     branches: [main]
   workflow_dispatch:
 
@@ -21,8 +21,8 @@ env:
   BUILD_CONFIGURATION: Release
 
 jobs:
-  build-api:
-    name: Build .NET API
+  build-and-test-api:
+    name: Build & Test .NET API
     runs-on: ubuntu-latest
 
     steps:
@@ -47,6 +47,9 @@ jobs:
 
       - name: Build solution
         run: dotnet build "CV Tracker.sln" -c ${{ env.BUILD_CONFIGURATION }} --no-restore --nologo
+
+      - name: Run unit tests
+        run: dotnet test CvTracker.Api.Tests/CvTracker.Api.Tests.csproj --no-build -c ${{ env.BUILD_CONFIGURATION }} --nologo --logger "console;verbosity=normal"
 
   build-client:
     name: Build React Client

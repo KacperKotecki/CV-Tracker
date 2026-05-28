@@ -54,9 +54,10 @@ This skill implements a disciplined refactoring workflow for CV Tracker (.NET 10
    - If build passes: proceed to next step.
 
 5. **Final verification**:
-   - After all steps, run both builds clean:
+   - After all steps, run both builds and tests clean:
      ```powershell
      dotnet build "CV Tracker.sln" --nologo
+     dotnet test CvTracker.Api.Tests/CvTracker.Api.Tests.csproj --no-build --nologo
      cd CvTracker.Client && npm run build
      ```
    - Confirm CV Tracker invariants still hold (see below).
@@ -77,11 +78,14 @@ This skill implements a disciplined refactoring workflow for CV Tracker (.NET 10
 ```
 Step 1: Identify — confirmed, mapping of JobOffer → JobOfferDto duplicated in GET list + GET by id + POST + PUT.
 Step 2: Baseline — dotnet build "CV Tracker.sln" --nologo → PASS
+         dotnet test CvTracker.Api.Tests/CvTracker.Api.Tests.csproj --no-build --nologo → PASS
 Step 3: Extract private static MapToDto(JobOffer o) → JobOfferDto helper method.
         dotnet build "CV Tracker.sln" --nologo → PASS
+        dotnet test CvTracker.Api.Tests/CvTracker.Api.Tests.csproj --no-build --nologo → PASS
 Step 4: Replace all 4 inline projections with MapToDto() call.
         dotnet build "CV Tracker.sln" --nologo → PASS
-Final: Invariants verified — no Service/Repository introduced, DTOs unchanged, build clean.
+        dotnet test CvTracker.Api.Tests/CvTracker.Api.Tests.csproj --no-build --nologo → PASS
+Final: Invariants verified — no Repository layer introduced, DTOs unchanged, build + tests clean.
 ```
 
 ## Reference
@@ -90,7 +94,7 @@ This skill uses `.github/prompts/refactor.prompt.md` for additional CV Tracker-s
 
 ## What this skill does NOT do
 
-- Does not write or run automated tests (CV Tracker has no test project).
+- Does not add new test files beyond fixing broken tests — the test project is `CvTracker.Api.Tests/`; adding new tests for a refactor is the implementer's responsibility, not the refactorer's.
 - Does not change behavior — if new logic is required, use the full agentic pipeline instead:
   `pwsh ./scripts/agent-run.ps1 init -RunId <id> -PromptPath <prompt>`
 - Does not introduce service/repository layers — this violates a hard invariant.

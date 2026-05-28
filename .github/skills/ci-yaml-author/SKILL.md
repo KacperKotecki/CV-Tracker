@@ -5,7 +5,7 @@ description: Author or modify GitHub Actions workflows — verify triggers, conc
 
 # CI YAML Author Skill for CV Tracker
 
-This skill creates or modifies GitHub Actions workflow files (`.github/workflows/*.yml`) for CV Tracker (.NET 10 Web API + React 19 TypeScript, no test project). It ensures every workflow follows GitHub Actions security best practices and covers both the .NET API and the React frontend.
+This skill creates or modifies GitHub Actions workflow files (`.github/workflows/*.yml`) for CV Tracker (.NET 10 Web API + React 19 TypeScript). It ensures every workflow follows GitHub Actions security best practices and covers both the .NET API and the React frontend.
 
 ## Core Rules
 
@@ -50,8 +50,10 @@ This skill creates or modifies GitHub Actions workflow files (`.github/workflows
 
 - name: Build
   run: dotnet build "CV Tracker.sln" --no-restore --nologo -c Release
+
+- name: Test
+  run: dotnet test CvTracker.Api.Tests/CvTracker.Api.Tests.csproj --no-build -c Release --nologo --logger "console;verbosity=normal"
 ```
-> ⚠️ No `dotnet test` step — CV Tracker has no test project.
 
 **Frontend (React + TypeScript + Vite):**
 ```yaml
@@ -90,12 +92,12 @@ This skill creates or modifies GitHub Actions workflow files (`.github/workflows
 ### 7. Branch Protection Integration
 - Status checks must be named exactly as they appear in the workflow's `jobs.<job-id>` key.
 - Recommend requiring these checks in branch protection:
-  - `build-api` — .NET build
+  - `build-and-test-api` — .NET build + unit tests
   - `build-client` — React build + lint
 - Do not use matrix strategies for this project — the two builds are independent jobs.
 
 ### 8. Common Mistakes to Avoid
-- `dotnet test` without a test project — there is no test project in CV Tracker.
+- Running `dotnet test "CV Tracker.sln"` instead of targeting the project — always use `dotnet test CvTracker.Api.Tests/CvTracker.Api.Tests.csproj` directly (matches `verify.ps1` behaviour).
 - Running npm commands from the repo root — always use `working-directory: CvTracker.Client`.
 - Hardcoding the API key — use `${{ secrets.OPENROUTER_API_KEY }}`.
 - Granting `write-all` permissions.
@@ -142,6 +144,9 @@ jobs:
 
       - name: Build
         run: dotnet build "CV Tracker.sln" --no-restore --nologo -c Release
+
+      - name: Test
+        run: dotnet test CvTracker.Api.Tests/CvTracker.Api.Tests.csproj --no-build -c Release --nologo --logger "console;verbosity=normal"
 
   build-client:
     runs-on: ubuntu-latest

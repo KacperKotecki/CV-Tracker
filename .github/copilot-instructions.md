@@ -16,24 +16,38 @@ Personal portfolio project: a Kanban-style job application tracker with AI-power
 CvTracker.Api/
 ├── Controllers/
 │   ├── JobApplicationsController.cs   # CRUD for job offers
-│   ├── ScrapeController.cs            # scrape + LLM-parse a URL into JobOfferDto
+│   ├── ScrapeController.cs            # scrape + LLM-parse a URL into ScrapedOfferDto
+│   ├── ProfileController.cs           # GET/PUT user profile, avatar, resume, skills
 │   └── Models/
 │       ├── JobOffer.cs                # EF Core entity
+│       ├── JobOfferNote.cs            # EF Core entity — notes per offer
+│       ├── UserProfile.cs             # EF Core entity
+│       ├── UserSkill.cs               # EF Core entity
 │       ├── ApplicationStatus.cs      # enum → stored as string
 │       ├── ContractType.cs           # enum → stored as string
 │       ├── WorkLoad.cs               # enum → stored as string
 │       ├── WorkMode.cs               # enum → stored as string
 │       └── DTOs/
 │           ├── JobOfferDto.cs
-│           └── ScrapedOfferDto.cs
-├── Data/AppDbContext.cs               # single DbContext, direct access from controllers
+│           ├── JobOfferNoteDto.cs
+│           ├── ScrapedOfferDto.cs
+│           ├── UpdateUserProfileRequest.cs
+│           ├── UpdateUserSkillsRequest.cs
+│           ├── UserProfileDto.cs
+│           └── UserSkillDto.cs
+├── Services/
+│   ├── IJobOfferService.cs
+│   └── JobOfferService.cs
+├── Data/AppDbContext.cs               # single DbContext, used by services and ProfileController
 └── Migrations/                        # EF Core migrations
 
+CvTracker.Api.Tests/                   # xUnit tests (JobOfferService, SalaryParser, ScraperFactory)
+
 CvTracker.Client/
-├── src/
-│   ├── components/                    # reusable UI components
-│   └── pages/                         # route-level pages (HomePage, Dashboard, OfferDetailPage, AddEditOfferPage)
-└── models/                            # TypeScript interfaces mirroring API models
+├── models/                            # TypeScript interfaces mirroring API models
+└── src/
+    ├── components/                    # reusable UI components
+    └── pages/                         # route-level pages (Dashboard, OffersPage, ProfilePage)
 ```
 
 ## Key conventions
@@ -60,6 +74,7 @@ CvTracker.Client/
 # API (from repo root)
 dotnet build "CV Tracker.sln"
 dotnet run --project CvTracker.Api
+dotnet test "CvTracker.Api.Tests/CvTracker.Api.Tests.csproj"
 
 # Migrations
 dotnet ef migrations add <Name> --project CvTracker.Api

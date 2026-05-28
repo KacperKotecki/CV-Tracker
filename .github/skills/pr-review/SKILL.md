@@ -14,7 +14,7 @@ Follow these mandates to review every changed file between the verified source a
 ### 0. General Principles
 
 - Always consider the **Principal-level perspective**: focus on architectural integrity, maintainability, performance, and long-term health of the codebase.
-- Be proactive in identifying **potential issues** relevant to CV Tracker conventions (no service layer, enum HasConversion, DTO locations, TypeScript mirror).
+- Be proactive in identifying **potential issues** relevant to CV Tracker conventions (no repository layer, enum HasConversion, DTO locations, TypeScript mirror).
 - Be positive and constructive; provide **concrete suggestions** for fixes with code snippets.
 - Skip style/formatting (EditorConfig handles this). Skip nits. Material findings only.
 
@@ -22,7 +22,7 @@ Follow these mandates to review every changed file between the verified source a
 
 **What to flag:**
 
-- **Service or Repository class introduced** — controllers must call `AppDbContext` directly. Any `IJobApplicationService`, `IJobOfferRepository`, or similar is a hard violation.
+- **Repository class introduced** — no `IRepository<T>` or `*Repository` classes. Controllers inject services (`IJobOfferService`, `IScraperFactory`); services call `AppDbContext` directly.
 - **Optional constructor parameters** (`Type? type = null`) on DI-registered services — dependencies must be explicit.
 - **Manual checks** replaceable by native .NET primitives (e.g., custom URL validation when `Uri.TryCreate` exists).
 - **DI scope mismatch** — `Scoped` per HTTP request for `AppDbContext`, `Singleton` for stateless helpers, `Transient` only when explicitly required.
@@ -31,7 +31,7 @@ Follow these mandates to review every changed file between the verified source a
 - Missing **`CancellationToken`** parameters on async controller actions.
 - Unnecessary interface abstractions where a concrete class suffices.
 
-**Severity:** Blocker (Service/Repository class, DI scope mismatch, `.Result/.Wait`). Major (direct `HttpClient`, missing `CancellationToken`). Minor (unnecessary interface).
+**Severity:** Blocker (Repository class, DI scope mismatch, `.Result/.Wait`). Major (direct `HttpClient`, missing `CancellationToken`). Minor (unnecessary interface).
 
 ### 2. Concurrency & Memory Management
 
@@ -57,12 +57,12 @@ Follow these mandates to review every changed file between the verified source a
 
 ### 4. CV Tracker-Specific Rules
 
-#### No Service / Repository Layer
+#### No Repository Layer
 
-- **Any class named `*Service` or `*Repository`** in `CvTracker.Api/` — controllers call `AppDbContext` directly. No exceptions.
-- **Injecting a custom interface** into a controller when the interface wraps only `AppDbContext` calls — remove the indirection.
+- **Any class named `*Repository`** or interface `IRepository<T>` in `CvTracker.Api/` — the project has no repository layer. Controllers inject services (`IJobOfferService`, `IScraperFactory`); services and scrapers call `AppDbContext` directly. `ProfileController` is the exception — it injects `AppDbContext` directly (no service wrapper needed).
+- **New service class without an interface** — services must be behind an interface (e.g. `IJobOfferService`) for testability; register both in `Program.cs`.
 
-**Severity:** Blocker.
+**Severity:** Blocker (Repository class). Major (service without interface).
 
 #### Enum HasConversion
 
@@ -138,7 +138,7 @@ Follow these mandates to review every changed file between the verified source a
 4. **Post material findings**:
    - Each material finding (Blocker/Major severity) must be posted as a **separate comment** on the PR:
      ```bash
-     gh pr review <num> --comment -b "**[Blocker] Service class introduced**\n\nFile: CvTracker.Api/Services/JobApplicationService.cs\n\nControllers must call AppDbContext directly. No service/repository layer allowed.\n\n**Suggested fix:** Move logic back into the controller action and inject AppDbContext directly."
+     gh pr review <num> --comment -b "**[Blocker] Repository class introduced**\n\nFile: CvTracker.Api/Repositories/JobApplicationRepository.cs\n\nThe project has no repository layer. Controllers inject services (IJobOfferService); services call AppDbContext directly.\n\n**Suggested fix:** Remove the repository class and move the data access logic into the service."
      ```
 
 5. **Skip style-only / nit feedback**:
@@ -147,7 +147,7 @@ Follow these mandates to review every changed file between the verified source a
 
 6. **If no material findings**:
    ```bash
-   gh pr review <num> --approve -b "✅ No material findings. All mandates verified:\n- Architecture & DI: PASS\n- Concurrency & memory: PASS\n- Null safety & side effects: PASS\n- CV Tracker rules (no service layer, HasConversion, DTO locations, TS mirror): PASS\n- Frontend TypeScript: PASS"
+   gh pr review <num> --approve -b "✅ No material findings. All mandates verified:\n- Architecture & DI: PASS\n- Concurrency & memory: PASS\n- Null safety & side effects: PASS\n- CV Tracker rules (no repository layer, HasConversion, DTO locations, TS mirror): PASS\n- Frontend TypeScript: PASS"
    ```
 
 ---
@@ -156,7 +156,7 @@ Follow these mandates to review every changed file between the verified source a
 
 | Severity | Definition | Action |
 |---|---|---|
-| **Blocker** | Violates architectural invariant (Service/Repository class, missing HasConversion, missing TS model sync, secret in code, auth attribute added). | Blocks merge. Request changes. |
+| **Blocker** | Violates architectural invariant (Repository class, missing HasConversion, missing TS model sync, secret in code, auth attribute added). | Blocks merge. Request changes. |
 | **Major** | Correctness risk or significant maintainability issue (DI scope, `.Result/.Wait`, wrong DTO folder, `any` type). | Should fix before merge. |
 | **Minor** | Low risk, low impact. Can be addressed in a follow-up. | Comment, do not block. |
 

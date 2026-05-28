@@ -31,7 +31,7 @@ Before submitting, run the **pr-review skill** for automated verification:
 
 ## Self-review checklist
 
-- [ ] No Service/Repository class introduced — controllers call `AppDbContext` directly
+- [ ] No Repository class introduced — controllers inject services; services call `AppDbContext` directly
 - [ ] New enum properties have `.HasConversion<string>()` in `AppDbContext.OnModelCreating`
 - [ ] DTOs are in `CvTracker.Api/Controllers/Models/DTOs/`, entities in `CvTracker.Api/Controllers/Models/`
 - [ ] C# DTO changes are mirrored in `CvTracker.Client/models/`
