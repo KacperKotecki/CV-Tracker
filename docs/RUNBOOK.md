@@ -75,8 +75,18 @@ npm run lint
 | `GET` | `/api/jobapplications/{id}` | Get single offer |
 | `POST` | `/api/jobapplications` | Create offer |
 | `PUT` | `/api/jobapplications/{id}` | Update offer |
+| `PATCH` | `/api/jobapplications/{id}/status` | Update offer status only |
 | `DELETE` | `/api/jobapplications/{id}` | Delete offer |
+| `GET` | `/api/jobapplications/{id}/notes` | List notes for offer |
+| `POST` | `/api/jobapplications/{id}/notes` | Add note to offer |
+| `DELETE` | `/api/jobapplications/{id}/notes/{noteId}` | Delete note |
 | `POST` | `/api/scrape` | Scrape URL → `ScrapedOfferDto` |
+| `GET` | `/api/profile` | Get user profile + skills |
+| `PUT` | `/api/profile` | Update user profile fields |
+| `POST` | `/api/profile/avatar` | Upload avatar image (jpg/png/webp) |
+| `POST` | `/api/profile/resume` | Upload resume file (pdf/doc/docx) |
+| `PUT` | `/api/profile/skills` | Replace all user skills/technologies |
+| `GET` | `/api/technologies` | List all technologies grouped by category |
 
 Swagger UI available at `http://localhost:5161/swagger` in Development.
 
@@ -111,6 +121,8 @@ Plan: ./.agent-run/.../plan.approved.md
 The read-only reference (before your edits) is always at `commit-message.proposed.md` in the same run folder.
 
 
+
+## Troubleshooting
 
 | Symptom | Likely cause | Fix |
 |---------|-------------|-----|
