@@ -528,4 +528,22 @@ public class JobOfferServiceTests : IDisposable
         joinRows.Should().HaveCount(1);
         joinRows[0].TechnologyId.Should().Be(tech2.Id);
     }
+
+    [Fact]
+    public async Task CreateAsync_PopulatesRequiredSkillIdsAndNames_OnReturnedEntity()
+    {
+        // Arrange
+        var tech = TestBuilders.BuildTechnology(id: 1, name: "Go");
+        _context.Technologies.Add(tech);
+        await _context.SaveChangesAsync();
+
+        var dto = TestBuilders.BuildJobOfferDto(requiredSkillIds: [tech.Id]);
+
+        // Act
+        var result = await _sut.CreateAsync(dto);
+
+        // Assert
+        result.RequiredSkillIds.Should().ContainSingle().Which.Should().Be(tech.Id);
+        result.RequiredSkillNames.Should().ContainSingle().Which.Should().Be(tech.Name);
+    }
 }

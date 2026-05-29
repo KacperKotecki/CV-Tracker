@@ -214,7 +214,117 @@ public class OfferTextParserServiceTests
         result.CompanyName.Should().Be("TechCorp");
     }
 
-    // ── Location extraction ───────────────────────────────────────────────────
+    // ── Position — strategy 3 tightening ─────────────────────────────────────
+
+    [Fact]
+    public async Task Parse_PositionCityName_ReturnsNull()
+    {
+        var parser = await BuildParserAsync(Guid.NewGuid().ToString());
+
+        // "Warszawa" is a single word — fails all strategy-3 conditions (word count < 2).
+        const string text = "Warszawa\nOferujemy pracę zdalną, B2B.";
+        var result = parser.Parse(text);
+
+        result.Position.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Parse_PositionSectionHeading_ReturnsNull()
+    {
+        var parser = await BuildParserAsync(Guid.NewGuid().ToString());
+
+        // "Benefity" is a single-word section heading — word count < 2, strategy 3 does not fire.
+        const string text = "Benefity\nPrywatna opieka medyczna";
+        var result = parser.Parse(text);
+
+        result.Position.Should().BeNull();
+    }
+
+    // ── Company name — legal form heuristic ───────────────────────────────────
+
+    [Fact]
+    public async Task Parse_CompanyNameViaLegalFormSpZOO_ReturnsCompany()
+    {
+        var parser = await BuildParserAsync(Guid.NewGuid().ToString());
+
+        const string text = "Acme Sp. z o.o.\nOpis stanowiska.";
+        var result = parser.Parse(text);
+
+        result.CompanyName.Should().Be("Acme Sp. z o.o.");
+    }
+
+    [Fact]
+    public async Task Parse_CompanyNameViaLegalFormGmbH_ReturnsCompany()
+    {
+        var parser = await BuildParserAsync(Guid.NewGuid().ToString());
+
+        const string text = "TechCorp GmbH\nSzukamy programisty.";
+        var result = parser.Parse(text);
+
+        result.CompanyName.Should().Be("TechCorp GmbH");
+    }
+
+    [Fact]
+    public async Task Parse_CompanyNameViaLegalFormLtd_ReturnsCompany()
+    {
+        var parser = await BuildParserAsync(Guid.NewGuid().ToString());
+
+        const string text = "Future Ltd.\nJoin our team.";
+        var result = parser.Parse(text);
+
+        result.CompanyName.Should().Be("Future Ltd.");
+    }
+
+    // ── Company name — candidate validation ───────────────────────────────────
+
+    [Fact]
+    public async Task Parse_CompanyNameTitleCaseFallback_ExclusionVerbRejectsCandidate_ReturnsNull()
+    {
+        var parser = await BuildParserAsync(Guid.NewGuid().ToString());
+
+        // "Tworzymy" is an exclusion verb — IsValidCompanyCandidate returns false.
+        const string text = "Tworzymy Nowoczesne Rozwiązania\nStanowisko: Developer";
+        var result = parser.Parse(text);
+
+        result.CompanyName.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Parse_CompanyNameTitleCaseFallback_DashRejectsCandidate_ReturnsNull()
+    {
+        var parser = await BuildParserAsync(Guid.NewGuid().ToString());
+
+        // "Tech-Corp" contains a hyphen — IsValidCompanyCandidate returns false.
+        const string text = "Tech-Corp Solutions\nStanowisko: Developer";
+        var result = parser.Parse(text);
+
+        result.CompanyName.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Parse_CompanyNameTitleCaseFallback_CityCommaRejectsCandidate_ReturnsNull()
+    {
+        var parser = await BuildParserAsync(Guid.NewGuid().ToString());
+
+        // "Centrum, Warszawa" matches the comma + known-city pattern — candidate rejected.
+        const string text = "Centrum, Warszawa\nStanowisko: Developer";
+        var result = parser.Parse(text);
+
+        result.CompanyName.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Parse_CompanyNameTitleCaseFallback_ValidStandaloneLine_ReturnsCompany()
+    {
+        var parser = await BuildParserAsync(Guid.NewGuid().ToString());
+
+        // "Bright Minds Agency" is a standalone title-case line with no disqualifying signals.
+        const string text = "Bright Minds Agency\nStanowisko: Developer";
+        var result = parser.Parse(text);
+
+        result.CompanyName.Should().Be("Bright Minds Agency");
+    }
+
 
     [Fact]
     public async Task Parse_LocationViaLokalizacjaLabel_ReturnsLocation()
