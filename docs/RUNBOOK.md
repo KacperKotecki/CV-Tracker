@@ -9,8 +9,8 @@ Operational notes for running CV Tracker locally.
 ```bash
 # 1. API — from repo root
 dotnet build "CV Tracker.sln"
-dotnet ef database update --project CvTracker.Api   # creates CVTracker.db
-dotnet run --project CvTracker.Api                  # http://localhost:5161
+dotnet run --project CvTracker.Api   # http://localhost:5161
+                                     # migrations and seeding run automatically on startup
 
 # 2. Frontend — in a second terminal
 cd CvTracker.Client
@@ -37,7 +37,7 @@ dotnet user-secrets set "OpenRouter:Model" "openai/gpt-4o-mini" --project CvTrac
 
 ```bash
 rm CvTracker.Api/CVTracker.db
-dotnet ef database update --project CvTracker.Api
+dotnet run --project CvTracker.Api   # MigrateAsync() recreates the DB and re-seeds technologies
 ```
 
 ## Common operations
@@ -129,7 +129,9 @@ The read-only reference (before your edits) is always at `commit-message.propose
 | `dotnet build` fails | Source error or missing restore | `dotnet restore "CV Tracker.sln"`, then retry |
 | Frontend `npm run build` fails | TypeScript error or missing packages | `npm install` in `CvTracker.Client/`; check TypeScript errors |
 | `/api/scrape` returns 500 | Missing OpenRouter API key | `dotnet user-secrets set "OpenRouter:ApiKey" "<key>" --project CvTracker.Api` |
-| `table not found` (SQLite) | Migration not applied | `dotnet ef database update --project CvTracker.Api` |
+| `table not found` (SQLite) | Migration not applied | Restart the API — `MigrateAsync()` in `Program.cs` applies pending migrations automatically |
+| Technologies table empty / seeding partial | Duplicate names/aliases in JSON | Check `CvTracker.Api/jobOfferSkills.json` for duplicate `canonicalName` or `aliases` entries; fix duplicates, rebuild, restart |
+| `UNIQUE constraint failed: Technologies.Name` | Duplicate canonicalName in JSON | Remove duplicate entries from `jobOfferSkills.json`, run `dotnet build` (to copy JSON to bin/), then restart |
 | CORS error in browser | API not on expected port | Confirm API is on `http://localhost:5161`; check `AllowReact` in `Program.cs` |
 | Enums serialize as integers | Missing `HasConversion<string>()` | Add `.HasConversion<string>()` in `AppDbContext.OnModelCreating` |
 | Frontend model out of sync with API | C# DTO changed without updating TS | Mirror changes in `CvTracker.Client/models/*.ts` |

@@ -70,7 +70,8 @@ CvTracker.Client/
 - **No authentication** — this is a single-user personal tool.
 - **CORS**: `AllowReact` policy allows `http://localhost:5173` (Vite dev server). New endpoints do not need CORS changes.
 - **DTOs** live under `Controllers/Models/DTOs/`. Entities live under `Controllers/Models/`.
-- **Skill seeding**: `Technologies` and `TechnologyAliases` are seeded at startup from `CvTracker.Api/jobOfferSkills.json` via `ISkillSeedingService`. `ISkillNormalizationService` (singleton) resolves raw skill text → `Technology` ID using the seeded aliases.
+- **Skill seeding**: `Technologies` and `TechnologyAliases` are seeded at startup from `CvTracker.Api/jobOfferSkills.json` via `ISkillSeedingService`. `ISkillNormalizationService` (singleton) resolves raw skill text → `Technology` ID using the seeded aliases. Seeding is idempotent — safe to restart.
+- **Skill system — ID only, no strings**: Skills and technologies are stored exclusively as `TechnologyId` integer foreign keys referencing the `Technologies` table. **It is strictly forbidden to store skill names as plain strings in any entity, DTO, or API payload.** `JobOffer` uses `ICollection<JobOfferTechnology>` (join table). `UserProfile` uses `ICollection<UserTechnology>`. The frontend passes `number[]` IDs, never `string[]` names. The only source of truth for skill names is the `Technologies` table — populated once from `jobOfferSkills.json`.
 - **OpenRouter API key** must be stored in .NET user secrets (`dotnet user-secrets set "OpenRouter:ApiKey" "<value>"`), not in `appsettings.Development.json`.
 
 ### Frontend

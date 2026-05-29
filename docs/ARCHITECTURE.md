@@ -152,4 +152,5 @@ Model and API key are configured via:
 - **No authentication** — single-user personal tool.
 - **CORS** — `AllowReact` policy for `http://localhost:5173` only; configured in `Program.cs`.
 - **JSON serialization** — `JsonStringEnumConverter` registered globally; enums travel as strings over the wire.
-- **Skill seeding** — `Technologies` and `TechnologyAliases` are seeded at startup from `CvTracker.Api/jobOfferSkills.json` by `ISkillSeedingService`.
+- **Skill seeding** — `Technologies` and `TechnologyAliases` are seeded once at startup from `CvTracker.Api/jobOfferSkills.json` by `ISkillSeedingService`. Seeding is idempotent and safe to re-run. The database is auto-migrated via `MigrateAsync()` in `Program.cs` on every startup — no manual `dotnet ef database update` required.
+- **Skill system — ID only, no strings** — Skills and technologies are ALWAYS stored as `TechnologyId` integer foreign keys referencing the `Technologies` table. **It is strictly forbidden to store skill names as plain strings in any entity, DTO, or API payload.** `JobOffer.RequiredTechnologies` is `ICollection<JobOfferTechnology>`. `UserTechnology` holds a `TechnologyId` + `Proficiency`. The frontend works with `number[]` IDs. The only source of truth for skill names/categories is the `Technologies` table.
