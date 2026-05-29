@@ -43,6 +43,8 @@ public class SkillSeedingService : ISkillSeedingService
             return;
         }
 
+        var seenAliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         foreach (var entry in entries)
         {
             var technology = new Technology
@@ -55,9 +57,16 @@ public class SkillSeedingService : ISkillSeedingService
 
             foreach (var alias in entry.Aliases)
             {
+                var normalized = alias.Trim().ToLowerInvariant();
+                if (!seenAliases.Add(normalized))
+                {
+                    _logger.LogWarning("Duplicate alias '{Alias}' skipped for technology '{Name}'.", normalized, entry.CanonicalName);
+                    continue;
+                }
+
                 _context.TechnologyAliases.Add(new TechnologyAlias
                 {
-                    Alias = alias.Trim().ToLowerInvariant(),
+                    Alias = normalized,
                     TechnologyId = technology.Id,
                 });
             }

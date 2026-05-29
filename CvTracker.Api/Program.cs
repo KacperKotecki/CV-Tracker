@@ -52,9 +52,12 @@ builder.Services.AddSingleton<ISkillNormalizationService, SkillNormalizationServ
 
 var app = builder.Build();
 
-// Run seeding then initialize normalization cache
+// Apply pending migrations and seed data
 using (var scope = app.Services.CreateScope())
 {
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
+
     var seeder = scope.ServiceProvider.GetRequiredService<ISkillSeedingService>();
     await seeder.SeedAsync();
 }

@@ -243,6 +243,7 @@ namespace CvTracker.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("JobOffer");
+
                     b.Navigation("Technology");
                 });
 
@@ -271,13 +272,16 @@ namespace CvTracker.Api.Migrations
             modelBuilder.Entity("JobOffer", b =>
                 {
                     b.Navigation("Notes");
+
                     b.Navigation("RequiredTechnologies");
                 });
 
             modelBuilder.Entity("Technology", b =>
                 {
                     b.Navigation("Aliases");
+
                     b.Navigation("JobOfferTechnologies");
+
                     b.Navigation("UserTechnologies");
                 });
 #pragma warning restore 612, 618

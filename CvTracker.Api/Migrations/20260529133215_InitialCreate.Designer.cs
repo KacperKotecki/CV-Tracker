@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CvTracker.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260522223659_SkillsToRequiredSkills")]
-    partial class SkillsToRequiredSkills
+    [Migration("20260529133215_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -52,10 +52,6 @@ namespace CvTracker.Api.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("RejectionReason")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("RequiredSkills")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<decimal?>("SalaryMax")
@@ -110,6 +106,68 @@ namespace CvTracker.Api.Migrations
                     b.ToTable("JobOfferNotes");
                 });
 
+            modelBuilder.Entity("JobOfferTechnology", b =>
+                {
+                    b.Property<int>("JobOfferId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TechnologyId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("JobOfferId", "TechnologyId");
+
+                    b.HasIndex("TechnologyId");
+
+                    b.ToTable("JobOfferTechnologies");
+                });
+
+            modelBuilder.Entity("Technology", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Technologies_Name_CI");
+
+                    b.ToTable("Technologies");
+                });
+
+            modelBuilder.Entity("TechnologyAlias", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Alias")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TechnologyId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Alias")
+                        .IsUnique()
+                        .HasDatabaseName("IX_TechnologyAliases_Alias_CI");
+
+                    b.HasIndex("TechnologyId");
+
+                    b.ToTable("TechnologyAliases");
+                });
+
             modelBuilder.Entity("UserProfile", b =>
                 {
                     b.Property<int>("Id")
@@ -145,26 +203,23 @@ namespace CvTracker.Api.Migrations
                     b.ToTable("UserProfiles");
                 });
 
-            modelBuilder.Entity("UserSkill", b =>
+            modelBuilder.Entity("UserTechnology", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("Proficiency")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("SkillName")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<int>("TechnologyId")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserSkills");
+                    b.HasIndex("TechnologyId");
+
+                    b.ToTable("UserTechnologies");
                 });
 
             modelBuilder.Entity("JobOfferNote", b =>
@@ -176,9 +231,61 @@ namespace CvTracker.Api.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("JobOfferTechnology", b =>
+                {
+                    b.HasOne("JobOffer", "JobOffer")
+                        .WithMany("RequiredTechnologies")
+                        .HasForeignKey("JobOfferId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Technology", "Technology")
+                        .WithMany("JobOfferTechnologies")
+                        .HasForeignKey("TechnologyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("JobOffer");
+
+                    b.Navigation("Technology");
+                });
+
+            modelBuilder.Entity("TechnologyAlias", b =>
+                {
+                    b.HasOne("Technology", "Technology")
+                        .WithMany("Aliases")
+                        .HasForeignKey("TechnologyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Technology");
+                });
+
+            modelBuilder.Entity("UserTechnology", b =>
+                {
+                    b.HasOne("Technology", "Technology")
+                        .WithMany("UserTechnologies")
+                        .HasForeignKey("TechnologyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Technology");
+                });
+
             modelBuilder.Entity("JobOffer", b =>
                 {
                     b.Navigation("Notes");
+
+                    b.Navigation("RequiredTechnologies");
+                });
+
+            modelBuilder.Entity("Technology", b =>
+                {
+                    b.Navigation("Aliases");
+
+                    b.Navigation("JobOfferTechnologies");
+
+                    b.Navigation("UserTechnologies");
                 });
 #pragma warning restore 612, 618
         }
