@@ -18,21 +18,6 @@ npm install
 npm run dev   # http://localhost:5173
 ```
 
-### OpenRouter API key (required for scraping)
-
-The key must be stored in .NET user secrets — **never** in `appsettings*.json`:
-
-```bash
-dotnet user-secrets init --project CvTracker.Api
-dotnet user-secrets set "OpenRouter:ApiKey" "<your-key>" --project CvTracker.Api
-```
-
-Optionally override the model (default: `mistralai/mistral-7b-instruct:free`):
-
-```bash
-dotnet user-secrets set "OpenRouter:Model" "openai/gpt-4o-mini" --project CvTracker.Api
-```
-
 ### Reset the database
 
 ```bash
@@ -80,7 +65,7 @@ npm run lint
 | `GET` | `/api/jobapplications/{id}/notes` | List notes for offer |
 | `POST` | `/api/jobapplications/{id}/notes` | Add note to offer |
 | `DELETE` | `/api/jobapplications/{id}/notes/{noteId}` | Delete note |
-| `POST` | `/api/scrape` | Scrape URL → `ScrapedOfferDto` |
+| `POST` | `/api/parse` | Parse raw offer text → `ScrapedOfferDto` |
 | `GET` | `/api/profile` | Get user profile + skills |
 | `PUT` | `/api/profile` | Update user profile fields |
 | `POST` | `/api/profile/avatar` | Upload avatar image (jpg/png/webp) |
@@ -95,8 +80,6 @@ Swagger UI available at `http://localhost:5161/swagger` in Development.
 | Key | Location | Description |
 |---|---|---|
 | `ConnectionStrings:DefaultConnection` | `appsettings.Development.json` | SQLite file path (`Data Source=CVTracker.db`) |
-| `OpenRouter:ApiKey` | .NET user secrets | Required for `/api/scrape` |
-| `OpenRouter:Model` | `appsettings.json` or user secrets | LLM model identifier |
 
 ## Agent pipeline — commit message approval
 
@@ -128,7 +111,7 @@ The read-only reference (before your edits) is always at `commit-message.propose
 |---------|-------------|-----|
 | `dotnet build` fails | Source error or missing restore | `dotnet restore "CV Tracker.sln"`, then retry |
 | Frontend `npm run build` fails | TypeScript error or missing packages | `npm install` in `CvTracker.Client/`; check TypeScript errors |
-| `/api/scrape` returns 500 | Missing OpenRouter API key | `dotnet user-secrets set "OpenRouter:ApiKey" "<key>" --project CvTracker.Api` |
+| `/api/parse` returns 400 | Text too short or too long | Ensure input is 50–20 000 characters |
 | `table not found` (SQLite) | Migration not applied | Restart the API — `MigrateAsync()` in `Program.cs` applies pending migrations automatically |
 | Technologies table empty / seeding partial | Duplicate names/aliases in JSON | Check `CvTracker.Api/jobOfferSkills.json` for duplicate `canonicalName` or `aliases` entries; fix duplicates, rebuild, restart |
 | `UNIQUE constraint failed: Technologies.Name` | Duplicate canonicalName in JSON | Remove duplicate entries from `jobOfferSkills.json`, run `dotnet build` (to copy JSON to bin/), then restart |

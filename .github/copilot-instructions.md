@@ -1,6 +1,6 @@
 # CV Tracker — Copilot Instructions
 
-Personal portfolio project: a Kanban-style job application tracker with AI-powered offer scraping.
+Personal portfolio project: a Kanban-style job application tracker with local text parsing of job offers.
 
 ## Stack
 
@@ -8,7 +8,7 @@ Personal portfolio project: a Kanban-style job application tracker with AI-power
 |-------|------|
 | API | .NET 10, ASP.NET Core Web API, EF Core 10 (SQLite) |
 | Frontend | React 19, TypeScript, Vite, React Router v7 |
-| AI scraping | OpenRouter API (configurable model) |
+| Text parsing | Local regex/heuristics (no external API) |
 
 ## Project layout
 
@@ -16,7 +16,7 @@ Personal portfolio project: a Kanban-style job application tracker with AI-power
 CvTracker.Api/
 ├── Controllers/
 │   ├── JobApplicationsController.cs   # CRUD for job offers + notes + status patch
-│   ├── ScrapeController.cs            # scrape + LLM-parse a URL into ScrapedOfferDto
+│   ├── ParseController.cs             # POST /api/parse — raw text → local regex → ScrapedOfferDto
 │   ├── ProfileController.cs           # GET/PUT user profile, avatar, resume, skills
 │   ├── TechnologiesController.cs      # GET /api/technologies — grouped technology list
 │   └── Models/
@@ -34,6 +34,7 @@ CvTracker.Api/
 │       └── DTOs/
 │           ├── JobOfferDto.cs
 │           ├── JobOfferNoteDto.cs
+│           ├── ParseTextRequest.cs
 │           ├── ScrapedOfferDto.cs
 │           ├── TechnologyCategoryDto.cs
 │           ├── TechnologyDto.cs
@@ -44,20 +45,48 @@ CvTracker.Api/
 ├── Services/
 │   ├── IJobOfferService.cs
 │   ├── JobOfferService.cs
+│   ├── IOfferTextParserService.cs     # parses raw text → ScrapedOfferDto (local, no external API)
+│   ├── OfferTextParserService.cs
+│   ├── SalaryParser.cs                # static utility — extracts PLN salary range from text
 │   ├── ISkillNormalizationService.cs  # resolves raw skill text → Technology ID
 │   ├── SkillNormalizationService.cs
 │   ├── ISkillSeedingService.cs        # seeds Technologies + Aliases from jobOfferSkills.json
-│   └── SkillSeedingService.cs
+│   ├── SkillSeedingService.cs
+│   └── Parsing/                       # focused sub-parsers used by OfferTextParserService
+│       ├── ConditionsParser.cs        # extracts ContractType, WorkMode, WorkLoad
+│       ├── OfferParserKeywords.cs     # keyword constants for section detection
+│       ├── SectionParser.cs           # extracts Location and named sections (requirements, offer)
+│       └── TitleCompanyParser.cs      # extracts Position and CompanyName
 ├── Data/AppDbContext.cs               # single DbContext, used by services and ProfileController
 └── Migrations/                        # EF Core migrations
 
-CvTracker.Api.Tests/                   # xUnit tests (JobOfferService, SalaryParser, ScraperFactory)
+CvTracker.Api.Tests/                   # xUnit + FluentAssertions + EF Core InMemory
+├── Controllers/JobApplicationsControllerTests.cs
+├── Services/
+│   ├── JobOfferServiceTests.cs
+│   ├── OfferTextParserServiceTests.cs
+│   ├── SalaryParserTests.cs
+│   ├── SkillNormalizationServiceTests.cs
+│   └── SkillSeedingServiceTests.cs
+└── Helpers/TestBuilders.cs
 
 CvTracker.Client/
 ├── models/                            # TypeScript interfaces mirroring API models
+│   ├── ApplicationStatus.ts / ContractType.ts / WorkLoad.ts / WorkMode.ts
+│   ├── Company.ts
+│   ├── JobOffer.ts / JobOfferNote.ts
+│   ├── Technology.ts                  # Technology + TechnologyCategory interfaces
+│   ├── UserProfile.ts
+│   └── UserSkill.ts                   # UserTechnology + request interfaces
 └── src/
-    ├── components/                    # reusable UI components
-    └── pages/                         # route-level pages (Dashboard, OffersPage, ProfilePage)
+    ├── App.tsx                        # React Router v7 route tree (/, /dashboard, /profile)
+    ├── components/                    # AddCompanyForm, ApplicationCard, Header, MatchScoreBadge,
+    │                                  # Navbar, NotesTimeline, OfferDetailPanel, OfferDetailView,
+    │                                  # OfferForm, OfferListItem, OfferListPanel, OfferSkillPicker,
+    │                                  # ProfileInfoCard, SkillsCard, StatusColumn,
+    │                                  # TechnologyPickerAccordion
+    ├── pages/                         # Dashboard, OffersPage, ProfilePage
+    └── utils/offerUtils.ts
 ```
 
 ## Key conventions
@@ -70,9 +99,9 @@ CvTracker.Client/
 - **No authentication** — this is a single-user personal tool.
 - **CORS**: `AllowReact` policy allows `http://localhost:5173` (Vite dev server). New endpoints do not need CORS changes.
 - **DTOs** live under `Controllers/Models/DTOs/`. Entities live under `Controllers/Models/`.
+- **Local text parsing**: `POST /api/parse` accepts raw job-offer text and returns a `ScrapedOfferDto` using purely local regex/heuristic parsing via `IOfferTextParserService` — **no external API calls**. Salary extraction is delegated to the static `SalaryParser`; section/condition/title extraction to the sub-parsers in `Services/Parsing/`.
 - **Skill seeding**: `Technologies` and `TechnologyAliases` are seeded at startup from `CvTracker.Api/jobOfferSkills.json` via `ISkillSeedingService`. `ISkillNormalizationService` (singleton) resolves raw skill text → `Technology` ID using the seeded aliases. Seeding is idempotent — safe to restart.
 - **Skill system — ID only, no strings**: Skills and technologies are stored exclusively as `TechnologyId` integer foreign keys referencing the `Technologies` table. **It is strictly forbidden to store skill names as plain strings in any entity, DTO, or API payload.** `JobOffer` uses `ICollection<JobOfferTechnology>` (join table). `UserProfile` uses `ICollection<UserTechnology>`. The frontend passes `number[]` IDs, never `string[]` names. The only source of truth for skill names is the `Technologies` table — populated once from `jobOfferSkills.json`.
-- **OpenRouter API key** must be stored in .NET user secrets (`dotnet user-secrets set "OpenRouter:ApiKey" "<value>"`), not in `appsettings.Development.json`.
 
 ### Frontend
 
