@@ -1,6 +1,6 @@
-import { useState } from 'react'
 import type { UserTechnology } from '../../models/UserSkill'
 import type { TechnologyCategory } from '../../models/Technology'
+import TechnologyPickerAccordion from './TechnologyPickerAccordion'
 import './SkillsCard.css'
 
 interface SkillsCardProps {
@@ -13,6 +13,10 @@ interface SkillsCardProps {
   onCancel: () => void
 }
 
+/**
+ * Displays the user's skill pills in read-only mode and a TechnologyPickerAccordion
+ * in edit mode. The accordion state (expanded categories) lives inside the accordion.
+ */
 export default function SkillsCard({
   skills,
   categories,
@@ -22,28 +26,10 @@ export default function SkillsCard({
   onProficiencyChange,
   onCancel,
 }: SkillsCardProps) {
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
+  const selectedIds = skills.map(s => s.technologyId)
 
-  const toggleCategory = (name: string) => {
-    setExpandedCategories(prev => {
-      const next = new Set(prev)
-      if (next.has(name)) {
-        next.delete(name)
-      } else {
-        next.add(name)
-      }
-      return next
-    })
-  }
-
-  const getSkill = (technologyId: number): UserTechnology | undefined =>
+  const getSkill = (technologyId: number): { proficiency: number } | undefined =>
     skills.find(s => s.technologyId === technologyId)
-
-  const isSelected = (technologyId: number): boolean =>
-    getSkill(technologyId) !== undefined
-
-  const getProficiency = (technologyId: number): number =>
-    getSkill(technologyId)?.proficiency ?? 3
 
   if (!isEditing) {
     return (
@@ -91,63 +77,14 @@ export default function SkillsCard({
         </button>
       </div>
       <div className="skills-card__editor">
-        {categories.map(cat => {
-          const isExpanded = expandedCategories.has(cat.category)
-          const selectedInCategory = skills.filter(s => s.category === cat.category).length
-
-          return (
-            <div key={cat.category} className="skills-card__category">
-              <button
-                className="skills-card__category-header"
-                onClick={() => toggleCategory(cat.category)}
-                type="button"
-              >
-                <span>
-                  {cat.category}
-                  {selectedInCategory > 0 && (
-                    <span className="skills-card__category-count"> ({selectedInCategory})</span>
-                  )}
-                </span>
-                <span className={`skills-card__chevron${isExpanded ? ' skills-card__chevron--open' : ''}`}>
-                  ▸
-                </span>
-              </button>
-              {isExpanded && (
-                <div className="skills-card__category-body">
-                  {cat.technologies.map(tech => {
-                    const active = isSelected(tech.id)
-                    const proficiency = getProficiency(tech.id)
-
-                    return (
-                      <button
-                        key={tech.id}
-                        type="button"
-                        className={`skills-card__skill-row${active ? ' skills-card__skill-row--active' : ''}`}
-                        onClick={() => { void onSkillToggle(tech.id) }}
-                      >
-                        <span>{tech.name}</span>
-                        {active && (
-                          <span className="skills-card__dots" onClick={e => e.stopPropagation()}>
-                            {Array.from({ length: 5 }, (_, i) => (
-                              <span
-                                key={i}
-                                className={`skills-card__skill-dot${i < proficiency ? ' skills-card__skill-dot--filled' : ''}`}
-                                onClick={e => {
-                                  e.stopPropagation()
-                                  void onProficiencyChange(tech.id, i + 1)
-                                }}
-                              />
-                            ))}
-                          </span>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          )
-        })}
+        <TechnologyPickerAccordion
+          categories={categories}
+          selectedIds={selectedIds}
+          mode="profile"
+          onToggle={id => { void onSkillToggle(id) }}
+          getSkill={getSkill}
+          onProficiencyChange={(id, proficiency) => { void onProficiencyChange(id, proficiency) }}
+        />
       </div>
     </div>
   )

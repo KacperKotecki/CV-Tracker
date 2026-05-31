@@ -1,0 +1,131 @@
+/* Shared accordion styles used by both OfferSkillPicker (offer mode) and SkillsCard (profile mode). */
+
+.tech-picker__categories {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px;
+}
+
+.tech-picker__category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 6px 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: left;
+  border-radius: 4px;
+  color: var(--text-h, var(--text));
+  font-family: var(--sans, inherit);
+  transition: color 0.15s;
+
+  &:hover {
+    color: var(--accent);
+    background: var(--accent-bg, transparent);
+  }
+}
+
+.tech-picker__category-count {
+  font-weight: 400;
+  color: var(--accent);
+}
+
+.tech-picker__chevron {
+  transition: transform 0.15s;
+  display: inline-block;
+  font-size: 12px;
+}
+
+.tech-picker__chevron--open {
+  transform: rotate(90deg);
+}
+
+.tech-picker__category-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px 8px 8px;
+}
+
+/* Offer-mode: simple toggle buttons */
+.tech-picker__skill-btn {
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: none;
+  font-size: 0.78rem;
+  cursor: pointer;
+  color: var(--text, inherit);
+  font-family: var(--sans, inherit);
+  transition: border-color 0.1s, background 0.1s, color 0.1s;
+
+  &:hover {
+    border-color: var(--accent);
+  }
+
+  &.tech-picker__skill-btn--active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+}
+
+/* Profile-mode: skill row with optional proficiency dots */
+.tech-picker__skill-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-family: var(--sans, inherit);
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
+
+  &:hover {
+    background: var(--accent-bg);
+    color: var(--text-h);
+  }
+}
+
+.tech-picker__skill-row--active {
+  border-color: var(--accent-border, var(--accent));
+  background: var(--accent-bg);
+  color: var(--text-h);
+}
+
+.tech-picker__skill-dots {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.tech-picker__skill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: opacity 0.1s;
+
+  &:hover {
+    opacity: 0.7;
+  }
+}
+
+.tech-picker__skill-dot--filled {
+  background: var(--accent);
+}

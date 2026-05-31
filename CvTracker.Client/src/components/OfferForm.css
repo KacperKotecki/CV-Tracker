@@ -27,10 +27,11 @@
 }
 
 
-.offer-form__scrape-row {
+.offer-form__paste-row {
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
   margin-bottom: 20px;
   padding: 16px;
   border: 1px solid var(--border);
@@ -38,9 +39,11 @@
   background: var(--code-bg);
 }
 
-.offer-form__url-input {
-  margin-bottom: 0;
-  flex: 1;
+.offer-form__paste-error {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #d93025;
+  flex-basis: 100%;
 }
 
 .offer-form__fields {

@@ -61,9 +61,17 @@ export default function OffersPage() {
         window.alert(`Błąd zapisu: ${msg}`)
         return
       }
-      setOffers(prev =>
-        prev.map(o => o.id === dto.id ? { ...o, ...dto, notes: o.notes } as JobOffer : o)
-      )
+      // Re-fetch the updated offer so that requiredSkillNames (and other server-computed
+      // fields) are fresh in local state.  Falls back to spread-merge if the GET fails.
+      const refreshed = await fetch(`/api/jobapplications/${dto.id}`)
+      if (refreshed.ok) {
+        const freshOffer: JobOffer = await refreshed.json()
+        setOffers(prev => prev.map(o => o.id === dto.id ? freshOffer : o))
+      } else {
+        setOffers(prev =>
+          prev.map(o => o.id === dto.id ? { ...o, ...dto, notes: o.notes } as JobOffer : o)
+        )
+      }
       setPanelMode('detail')
     } else {
       // POST — returns 201 with created offer

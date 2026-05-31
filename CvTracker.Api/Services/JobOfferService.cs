@@ -104,6 +104,18 @@ public class JobOfferService : IJobOfferService
         if (dto.RequiredSkillIds.Count > 0)
             await _context.SaveChangesAsync();
 
+        // Populate [NotMapped] fields on the returned entity so the 201 response
+        // includes RequiredSkillIds and RequiredSkillNames (both are otherwise always empty
+        // because they are never persisted — they are computed from RequiredTechnologies).
+        if (dto.RequiredSkillIds.Count > 0)
+        {
+            var technologies = await _context.Technologies
+                .Where(t => dto.RequiredSkillIds.Contains(t.Id))
+                .ToListAsync();
+            jobOffer.RequiredSkillIds = technologies.Select(t => t.Id).ToList();
+            jobOffer.RequiredSkillNames = technologies.Select(t => t.Name).ToList();
+        }
+
         return jobOffer;
     }
 

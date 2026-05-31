@@ -9,6 +9,7 @@ import OfferSkillPicker from './OfferSkillPicker'
 import './OfferForm.css'
 import './OfferSkillPicker.css'
 
+/** Shape returned by POST /api/parse. */
 interface ScrapedOffer {
   position: string | null
   salaryMin: number | null
@@ -60,8 +61,8 @@ function makeEmptyForm() {
 
 export default function OfferForm({ offer, categories, onSave, onCancel }: Props) {
   const [form, setForm] = useState(makeEmptyForm)
-  const [offerUrl, setOfferUrl] = useState('')
-  const [isScraping, setIsScraping] = useState(false)
+  const [isPasting, setIsPasting] = useState(false)
+  const [pasteError, setPasteError] = useState<string | null>(null)
 
   useEffect(() => {
     if (offer) {
@@ -89,38 +90,68 @@ export default function OfferForm({ offer, categories, onSave, onCancel }: Props
     }
   }, [offer])
 
-  const handleScrape = async () => {
-    if (!offerUrl.trim()) return
-    setIsScraping(true)
+  /**
+   * Reads text from the system clipboard, validates length, sends it to
+   * POST /api/parse, and merges the returned fields into the form state.
+   * Non-null returned values overwrite the current form values.
+   */
+  const handlePaste = async () => {
+    setPasteError(null)
+
+    let text: string
     try {
-      const r = await fetch('/api/scrape', {
+      text = await navigator.clipboard.readText()
+    } catch {
+      setPasteError('Nie udało się odczytać schowka. Sprawdź uprawnienia przeglądarki.')
+      return
+    }
+
+    // Client-side guard: reject obviously empty or binary-looking content.
+    const trimmed = text.trim()
+    if (!trimmed || trimmed.length < 50) {
+      setPasteError('Schowek jest pusty lub tekst jest za krótki (min. 50 znaków).')
+      return
+    }
+
+    // Reject text that looks like binary data (high ratio of non-printable chars).
+    // eslint-disable-next-line no-control-regex
+    const nonPrintable = (trimmed.match(/[^\u0009\u000A\u000D\u0020-\u007E\u00A0-\uFFFF]/g) ?? []).length
+    if (nonPrintable / trimmed.length > 0.1) {
+      setPasteError('Schowek zawiera dane binarne — wklej tekst ze strony oferty.')
+      return
+    }
+
+    // Truncate at 20 000 chars before sending (server also truncates, but be explicit).
+    const payload = trimmed.length > 20_000 ? trimmed.slice(0, 20_000) : trimmed
+
+    setIsPasting(true)
+    try {
+      const r = await fetch('/api/parse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: offerUrl }),
+        body: JSON.stringify({ text: payload }),
       })
       if (!r.ok) {
-        const msg = await r.text()
-        window.alert(`Błąd: ${msg}`)
+        setPasteError(await r.text())
         return
       }
       const data: ScrapedOffer = await r.json()
       setForm(prev => ({
         ...prev,
-        position:        data.position        ?? prev.position,
-        salaryMin:       data.salaryMin       != null ? String(data.salaryMin) : prev.salaryMin,
-        salaryMax:       data.salaryMax       != null ? String(data.salaryMax) : prev.salaryMax,
-        contractType:    data.contractType    ?? prev.contractType,
-        workMode:        data.workMode        ?? prev.workMode,
-        workLoad:        data.workLoad        ?? prev.workLoad,
-        companyName:     data.companyName     ?? prev.companyName,
-        location:        data.location        ?? prev.location,
+        position:         data.position        ?? prev.position,
+        salaryMin:        data.salaryMin        != null ? String(data.salaryMin) : prev.salaryMin,
+        salaryMax:        data.salaryMax        != null ? String(data.salaryMax) : prev.salaryMax,
+        contractType:     data.contractType    ?? prev.contractType,
+        workMode:         data.workMode        ?? prev.workMode,
+        workLoad:         data.workLoad        ?? prev.workLoad,
+        companyName:      data.companyName     ?? prev.companyName,
+        location:         data.location        ?? prev.location,
         requiredSkillIds: data.requiredSkillIds?.length ? data.requiredSkillIds : prev.requiredSkillIds,
-        sourceUrl:       offerUrl,
       }))
     } catch {
-      window.alert('Błąd połączenia z serwerem.')
+      setPasteError('Błąd połączenia z serwerem.')
     } finally {
-      setIsScraping(false)
+      setIsPasting(false)
     }
   }
 
@@ -156,30 +187,25 @@ export default function OfferForm({ offer, categories, onSave, onCancel }: Props
       <div className="offer-form__header">
         <h2 className="offer-form__title">{offer ? 'Edytuj ofertę' : 'Nowa oferta'}</h2>
         <div className="offer-form__header-actions">
-          <button className="btn" onClick={handleSave} disabled={isScraping}>
+          <button className="btn" onClick={handleSave} disabled={isPasting}>
             Zapisz
           </button>
-          <button className="btn-secondary" onClick={onCancel} disabled={isScraping}>
+          <button className="btn-secondary" onClick={onCancel} disabled={isPasting}>
             Anuluj
           </button>
         </div>
       </div>
 
-      <div className="offer-form__scrape-row">
-        <input
-          className="form-field offer-form__url-input"
-          type="url"
-          value={offerUrl}
-          onChange={e => setOfferUrl(e.target.value)}
-          placeholder="Wklej URL oferty, aby pobrać dane..."
-          disabled={isScraping}
-        />
-        <button className="btn" onClick={handleScrape} disabled={isScraping}>
-          {isScraping ? 'Pobieranie...' : 'Pobierz dane'}
+      <div className="offer-form__paste-row">
+        <button className="btn" onClick={handlePaste} disabled={isPasting}>
+          {isPasting ? 'Analizowanie...' : '📋 Wklej skopiowane'}
         </button>
+        {pasteError && (
+          <p className="offer-form__paste-error">{pasteError}</p>
+        )}
       </div>
 
-      <fieldset className="offer-form__fields" disabled={isScraping}>
+      <fieldset className="offer-form__fields" disabled={isPasting}>
         <div className="offer-form__grid">
           <input className="form-field" type="text" value={form.position} onChange={e => setForm({ ...form, position: e.target.value })} placeholder="Stanowisko *" />
           <input className="form-field" type="text" value={form.companyName} onChange={e => setForm({ ...form, companyName: e.target.value })} placeholder="Nazwa firmy" />
