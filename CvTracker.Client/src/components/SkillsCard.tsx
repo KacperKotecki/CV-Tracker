@@ -1,5 +1,8 @@
 import type { UserTechnology } from '../../models/UserSkill'
 import type { TechnologyCategory } from '../../models/Technology'
+import type { SkillLevel } from '../../models/SkillLevel'
+import { skillLevelLabels } from '../../models/SkillLevel'
+import SkillPillList from './SkillPillList'
 import TechnologyPickerAccordion from './TechnologyPickerAccordion'
 import './SkillsCard.css'
 
@@ -9,7 +12,7 @@ interface SkillsCardProps {
   isEditing: boolean
   onEditToggle: () => void
   onSkillToggle: (technologyId: number) => Promise<void>
-  onProficiencyChange: (technologyId: number, proficiency: number) => Promise<void>
+  onLevelChange: (technologyId: number, level: SkillLevel) => Promise<void>
   onCancel: () => void
 }
 
@@ -23,12 +26,12 @@ export default function SkillsCard({
   isEditing,
   onEditToggle,
   onSkillToggle,
-  onProficiencyChange,
+  onLevelChange,
   onCancel,
 }: SkillsCardProps) {
   const selectedIds = skills.map(s => s.technologyId)
 
-  const getSkill = (technologyId: number): { proficiency: number } | undefined =>
+  const getSkill = (technologyId: number): { level: SkillLevel } | undefined =>
     skills.find(s => s.technologyId === technologyId)
 
   if (!isEditing) {
@@ -48,21 +51,13 @@ export default function SkillsCard({
             Brak umiejętności — kliknij ołówek, aby dodać
           </div>
         ) : (
-          <div className="skills-card__pills">
-            {skills.map(skill => (
-              <div key={skill.technologyId} className="skills-card__pill">
-                <span className="skills-card__pill-name">{skill.technologyName}</span>
-                <span className="skills-card__dots">
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <span
-                      key={i}
-                      className={`skills-card__dot${i < skill.proficiency ? ' skills-card__dot--filled' : ''}`}
-                    />
-                  ))}
-                </span>
-              </div>
-            ))}
-          </div>
+          <SkillPillList
+            pills={skills.map(s => ({
+              id: s.technologyId,
+              name: s.technologyName,
+              levelLabel: skillLevelLabels[s.level],
+            }))}
+          />
         )}
       </div>
     )
@@ -83,7 +78,7 @@ export default function SkillsCard({
           mode="profile"
           onToggle={id => { void onSkillToggle(id) }}
           getSkill={getSkill}
-          onProficiencyChange={(id, proficiency) => { void onProficiencyChange(id, proficiency) }}
+          onLevelChange={(id, level) => { void onLevelChange(id, level) }}
         />
       </div>
     </div>

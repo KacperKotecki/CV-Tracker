@@ -157,7 +157,7 @@ public class JobApplicationsControllerTests : IClassFixture<JobApplicationsWebAp
 
         // Act — POST a new offer that references the seeded skill ID.
         // This verifies the full data flow:
-        //   OfferForm requiredSkillIds → POST body → JobOfferDto.RequiredSkillIds
+        //   OfferForm requiredSkills → POST body → JobOfferDto.RequiredSkills
         //   → JobOfferService.CreateAsync → JobOfferTechnology rows inserted.
         var payload = new
         {
@@ -166,7 +166,7 @@ public class JobApplicationsControllerTests : IClassFixture<JobApplicationsWebAp
             workMode = "Remote",
             workLoad = "FullTime",
             status = "Applied",
-            requiredSkillIds = new[] { techId },
+            requiredSkills = new[] { new { technologyId = techId, requiredLevel = "Mid" } },
         };
         var postResponse = await client.PostAsJsonAsync("/api/jobapplications", payload);
         Assert.Equal(HttpStatusCode.Created, postResponse.StatusCode);

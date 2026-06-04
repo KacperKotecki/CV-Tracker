@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import type { TechnologyCategory } from '../../models/Technology'
+import { skillLevelOptions, type SkillLevel } from '../../models/SkillLevel'
 import './TechnologyPickerAccordion.css'
 
 interface TechnologyPickerAccordionProps {
   categories: TechnologyCategory[]
   selectedIds: number[]
-  /** offer: shows selection buttons only; profile: shows proficiency dots alongside each skill. */
+  /** offer: shows selection buttons only; profile: shows level select alongside each skill. */
   mode: 'offer' | 'profile'
   /** Called when a technology is toggled on or off. */
   onToggle: (id: number) => void
@@ -13,15 +14,19 @@ interface TechnologyPickerAccordionProps {
    * Profile mode only: returns the current UserTechnology for the given technologyId,
    * or undefined if not yet selected.
    */
-  getSkill?: (technologyId: number) => { proficiency: number } | undefined
-  /** Profile mode only: called when the user clicks a proficiency dot. */
-  onProficiencyChange?: (technologyId: number, proficiency: number) => void
+  getSkill?: (technologyId: number) => { level: SkillLevel } | undefined
+  /** Profile mode only: called when the user changes the skill level. */
+  onLevelChange?: (technologyId: number, level: SkillLevel) => void
+  /** Offer mode only: returns the current required level for the given technologyId. */
+  getOfferSkillLevel?: (id: number) => SkillLevel
+  /** Offer mode only: called when the required level changes for a skill. */
+  onOfferLevelChange?: (id: number, level: SkillLevel) => void
 }
 
 /**
  * Reusable collapsible category accordion for picking technologies.
- * Renders selection buttons in "offer" mode and adds interactive proficiency
- * dots in "profile" mode.
+ * Renders selection buttons in "offer" mode and adds interactive level
+ * selects in "profile" mode.
  */
 export default function TechnologyPickerAccordion({
   categories,
@@ -29,7 +34,9 @@ export default function TechnologyPickerAccordion({
   mode,
   onToggle,
   getSkill,
-  onProficiencyChange,
+  onLevelChange,
+  getOfferSkillLevel,
+  onOfferLevelChange,
 }: TechnologyPickerAccordionProps) {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
 
@@ -69,19 +76,39 @@ export default function TechnologyPickerAccordion({
             {isExpanded && (
               <div className="tech-picker__category-body">
                 {mode === 'offer'
-                  ? cat.technologies.map(tech => (
-                      <button
-                        key={tech.id}
-                        type="button"
-                        className={`tech-picker__skill-btn${selectedIds.includes(tech.id) ? ' tech-picker__skill-btn--active' : ''}`}
-                        onClick={() => onToggle(tech.id)}
-                      >
-                        {tech.name}
-                      </button>
-                    ))
+                  ? cat.technologies.map(tech => {
+                      const active = selectedIds.includes(tech.id)
+                      const currentLevel = getOfferSkillLevel?.(tech.id) ?? 'Mid'
+                      return (
+                        <div key={tech.id} className="tech-picker__offer-row">
+                          <button
+                            type="button"
+                            className={`tech-picker__skill-btn${active ? ' tech-picker__skill-btn--active' : ''}`}
+                            onClick={() => onToggle(tech.id)}
+                          >
+                            {tech.name}
+                          </button>
+                          {active && (
+                            <select
+                              className="tech-picker__level-select"
+                              value={currentLevel}
+                              onClick={e => e.stopPropagation()}
+                              onChange={e => {
+                                e.stopPropagation()
+                                onOfferLevelChange?.(tech.id, e.target.value as SkillLevel)
+                              }}
+                            >
+                              {skillLevelOptions.map(lvl => (
+                                <option key={lvl} value={lvl}>{lvl}</option>
+                              ))}
+                            </select>
+                          )}
+                        </div>
+                      )
+                    })
                   : cat.technologies.map(tech => {
                       const active = selectedIds.includes(tech.id)
-                      const proficiency = getSkill?.(tech.id)?.proficiency ?? 3
+                      const currentLevel = getSkill?.(tech.id)?.level ?? 'Mid'
 
                       return (
                         <button
@@ -92,21 +119,19 @@ export default function TechnologyPickerAccordion({
                         >
                           <span>{tech.name}</span>
                           {active && (
-                            <span
-                              className="tech-picker__skill-dots"
+                            <select
+                              className="tech-picker__level-select"
+                              value={currentLevel}
                               onClick={e => e.stopPropagation()}
+                              onChange={e => {
+                                e.stopPropagation()
+                                onLevelChange?.(tech.id, e.target.value as SkillLevel)
+                              }}
                             >
-                              {Array.from({ length: 5 }, (_, i) => (
-                                <span
-                                  key={i}
-                                  className={`tech-picker__skill-dot${i < proficiency ? ' tech-picker__skill-dot--filled' : ''}`}
-                                  onClick={e => {
-                                    e.stopPropagation()
-                                    onProficiencyChange?.(tech.id, i + 1)
-                                  }}
-                                />
+                              {skillLevelOptions.map(lvl => (
+                                <option key={lvl} value={lvl}>{lvl}</option>
                               ))}
-                            </span>
+                            </select>
                           )}
                         </button>
                       )

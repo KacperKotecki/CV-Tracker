@@ -28,6 +28,29 @@
   font-weight: 500;
 }
 
+/* Level label shown inside every skill pill (Profile read-only + offer detail/picker). */
+.skills-card__pill-level {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Remove button rendered inside removable pills (OfferSkillPicker selected-skills strip). */
+.skills-card__pill-remove {
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+  opacity: 0.6;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
 .skills-card__dots {
   display: flex;
   gap: 3px;

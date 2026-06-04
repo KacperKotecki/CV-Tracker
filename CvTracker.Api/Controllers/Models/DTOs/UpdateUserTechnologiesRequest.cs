@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+using CvTracker.Api.Models;
 
 public record UpdateUserTechnologiesRequest
 {
@@ -8,5 +8,5 @@ public record UpdateUserTechnologiesRequest
 public record UserTechnologyItemRequest
 {
     public int TechnologyId { get; set; }
-    [Range(1, 5)] public int Proficiency { get; set; }
+    public SkillLevel Level { get; set; } = SkillLevel.Mid;
 }

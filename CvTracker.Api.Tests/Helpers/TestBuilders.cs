@@ -23,7 +23,7 @@ public static class TestBuilders
     public static JobOfferDto BuildJobOfferDto(
         string position = "Software Engineer",
         ApplicationStatus status = ApplicationStatus.Draft,
-        List<int>? requiredSkillIds = null)
+        List<JobOfferSkillRequest>? requiredSkills = null)
     {
         return new JobOfferDto
         {
@@ -32,7 +32,7 @@ public static class TestBuilders
             WorkLoad = WorkLoad.FullTime,
             WorkMode = WorkMode.Remote,
             Status = status,
-            RequiredSkillIds = requiredSkillIds ?? [],
+            RequiredSkills = requiredSkills ?? [],
         };
     }
 

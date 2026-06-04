@@ -368,12 +368,12 @@ public class JobOfferServiceTests : IDisposable
     // ── Match score ────────────────────────────────────────────────────────────
 
     [Fact]
-    public async Task ComputeMatchScore_NoRequiredSkills_ReturnsNull()
+    public async Task ComputeMatchScore_NoRequiredSkills_Returns0()
     {
         // Arrange
         var tech = TestBuilders.BuildTechnology(id: 1);
         _context.Technologies.Add(tech);
-        _context.UserTechnologies.Add(new UserTechnology { TechnologyId = 1, Proficiency = 3 });
+        _context.UserTechnologies.Add(new UserTechnology { TechnologyId = 1, Level = SkillLevel.Mid });
         var offer = TestBuilders.BuildJobOffer(id: 1);
         _context.JobOffers.Add(offer);
         await _context.SaveChangesAsync();
@@ -382,7 +382,7 @@ public class JobOfferServiceTests : IDisposable
         var result = await _sut.GetByIdAsync(1);
 
         // Assert
-        result!.MatchScore.Should().BeNull();
+        result!.MatchScore.Should().Be(0);
     }
 
     [Fact]
@@ -393,12 +393,12 @@ public class JobOfferServiceTests : IDisposable
         _context.Technologies.Add(tech);
         await _context.SaveChangesAsync();
 
-        _context.UserTechnologies.Add(new UserTechnology { TechnologyId = tech.Id, Proficiency = 3 });
+        _context.UserTechnologies.Add(new UserTechnology { TechnologyId = tech.Id, Level = SkillLevel.Mid });
         var offer = TestBuilders.BuildJobOffer(id: 1);
         _context.JobOffers.Add(offer);
         await _context.SaveChangesAsync();
 
-        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech.Id });
+        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech.Id, RequiredLevel = SkillLevel.Mid });
         await _context.SaveChangesAsync();
 
         // Act
@@ -418,12 +418,12 @@ public class JobOfferServiceTests : IDisposable
         await _context.SaveChangesAsync();
 
         // User knows C# but offer requires Java
-        _context.UserTechnologies.Add(new UserTechnology { TechnologyId = tech1.Id, Proficiency = 3 });
+        _context.UserTechnologies.Add(new UserTechnology { TechnologyId = tech1.Id, Level = SkillLevel.Mid });
         var offer = TestBuilders.BuildJobOffer(id: 1);
         _context.JobOffers.Add(offer);
         await _context.SaveChangesAsync();
 
-        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech2.Id });
+        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech2.Id, RequiredLevel = SkillLevel.Mid });
         await _context.SaveChangesAsync();
 
         // Act
@@ -442,14 +442,14 @@ public class JobOfferServiceTests : IDisposable
         _context.Technologies.AddRange(tech1, tech2);
         await _context.SaveChangesAsync();
 
-        // User knows only C#; offer requires C# and Java
-        _context.UserTechnologies.Add(new UserTechnology { TechnologyId = tech1.Id, Proficiency = 3 });
+        // User knows only C#; offer requires C# (Mid) and Java (Mid)
+        _context.UserTechnologies.Add(new UserTechnology { TechnologyId = tech1.Id, Level = SkillLevel.Mid });
         var offer = TestBuilders.BuildJobOffer(id: 1);
         _context.JobOffers.Add(offer);
         await _context.SaveChangesAsync();
 
-        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech1.Id });
-        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech2.Id });
+        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech1.Id, RequiredLevel = SkillLevel.Mid });
+        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech2.Id, RequiredLevel = SkillLevel.Mid });
         await _context.SaveChangesAsync();
 
         // Act
@@ -469,7 +469,7 @@ public class JobOfferServiceTests : IDisposable
         _context.JobOffers.Add(offer);
         await _context.SaveChangesAsync();
 
-        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech.Id });
+        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech.Id, RequiredLevel = SkillLevel.Mid });
         await _context.SaveChangesAsync();
 
         // Act
@@ -488,7 +488,7 @@ public class JobOfferServiceTests : IDisposable
         _context.Technologies.Add(tech);
         await _context.SaveChangesAsync();
 
-        var dto = TestBuilders.BuildJobOfferDto(requiredSkillIds: [tech.Id]);
+        var dto = TestBuilders.BuildJobOfferDto(requiredSkills: [new JobOfferSkillRequest { TechnologyId = tech.Id, RequiredLevel = SkillLevel.Mid }]);
 
         // Act
         var created = await _sut.CreateAsync(dto);
@@ -512,11 +512,11 @@ public class JobOfferServiceTests : IDisposable
         _context.JobOffers.Add(offer);
         await _context.SaveChangesAsync();
 
-        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech1.Id });
+        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech1.Id, RequiredLevel = SkillLevel.Mid });
         await _context.SaveChangesAsync();
 
         // Now update with tech2 only
-        var dto = TestBuilders.BuildJobOfferDto(requiredSkillIds: [tech2.Id]);
+        var dto = TestBuilders.BuildJobOfferDto(requiredSkills: [new JobOfferSkillRequest { TechnologyId = tech2.Id, RequiredLevel = SkillLevel.Junior }]);
 
         // Act
         await _sut.UpdateAsync(offer.Id, dto);
@@ -537,7 +537,7 @@ public class JobOfferServiceTests : IDisposable
         _context.Technologies.Add(tech);
         await _context.SaveChangesAsync();
 
-        var dto = TestBuilders.BuildJobOfferDto(requiredSkillIds: [tech.Id]);
+        var dto = TestBuilders.BuildJobOfferDto(requiredSkills: [new JobOfferSkillRequest { TechnologyId = tech.Id, RequiredLevel = SkillLevel.Mid }]);
 
         // Act
         var result = await _sut.CreateAsync(dto);
@@ -545,5 +545,175 @@ public class JobOfferServiceTests : IDisposable
         // Assert
         result.RequiredSkillIds.Should().ContainSingle().Which.Should().Be(tech.Id);
         result.RequiredSkillNames.Should().ContainSingle().Which.Should().Be(tech.Name);
+    }
+
+    // ── Skill level match score tests ──────────────────────────────────────────
+
+    [Fact]
+    public async Task ComputeMatchScore_OverskilledUser_ReturnsFullScore()
+    {
+        // Arrange — user Senior(4), required Junior(2) → contribution = min(4,2)/2 = 1.0 → 100
+        var tech = TestBuilders.BuildTechnology(id: 1, name: "C#");
+        _context.Technologies.Add(tech);
+        await _context.SaveChangesAsync();
+
+        _context.UserTechnologies.Add(new UserTechnology { TechnologyId = tech.Id, Level = SkillLevel.Senior });
+        var offer = TestBuilders.BuildJobOffer(id: 1);
+        _context.JobOffers.Add(offer);
+        await _context.SaveChangesAsync();
+
+        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech.Id, RequiredLevel = SkillLevel.Junior });
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _sut.GetByIdAsync(offer.Id);
+
+        // Assert
+        result!.MatchScore.Should().Be(100);
+    }
+
+    [Fact]
+    public async Task ComputeMatchScore_UnderskilledUser_ReturnsPartialScore()
+    {
+        // Arrange — user Junior(2), required Senior(4) → contribution = min(2,4)/4 = 0.5 → 50
+        var tech = TestBuilders.BuildTechnology(id: 1, name: "C#");
+        _context.Technologies.Add(tech);
+        await _context.SaveChangesAsync();
+
+        _context.UserTechnologies.Add(new UserTechnology { TechnologyId = tech.Id, Level = SkillLevel.Junior });
+        var offer = TestBuilders.BuildJobOffer(id: 1);
+        _context.JobOffers.Add(offer);
+        await _context.SaveChangesAsync();
+
+        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech.Id, RequiredLevel = SkillLevel.Senior });
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _sut.GetByIdAsync(offer.Id);
+
+        // Assert
+        result!.MatchScore.Should().Be(50);
+    }
+
+    [Fact]
+    public async Task ComputeMatchScore_RequiredLevelIsTheory_UserHasTheory_ReturnsFullScore()
+    {
+        // Arrange — required Theory(0), user Theory(0) → contribution = 1.0 (special case) → 100
+        var tech = TestBuilders.BuildTechnology(id: 1, name: "Docker");
+        _context.Technologies.Add(tech);
+        await _context.SaveChangesAsync();
+
+        _context.UserTechnologies.Add(new UserTechnology { TechnologyId = tech.Id, Level = SkillLevel.Theory });
+        var offer = TestBuilders.BuildJobOffer(id: 1);
+        _context.JobOffers.Add(offer);
+        await _context.SaveChangesAsync();
+
+        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech.Id, RequiredLevel = SkillLevel.Theory });
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _sut.GetByIdAsync(offer.Id);
+
+        // Assert
+        result!.MatchScore.Should().Be(100);
+    }
+
+    [Fact]
+    public async Task ComputeMatchScore_UserLevelIsTheory_RequiredIsMid_ZeroContribution()
+    {
+        // Arrange — user Theory(0), required Mid(3) → contribution = min(0,3)/3 = 0 → 0
+        var tech = TestBuilders.BuildTechnology(id: 1, name: "Kubernetes");
+        _context.Technologies.Add(tech);
+        await _context.SaveChangesAsync();
+
+        _context.UserTechnologies.Add(new UserTechnology { TechnologyId = tech.Id, Level = SkillLevel.Theory });
+        var offer = TestBuilders.BuildJobOffer(id: 1);
+        _context.JobOffers.Add(offer);
+        await _context.SaveChangesAsync();
+
+        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech.Id, RequiredLevel = SkillLevel.Mid });
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _sut.GetByIdAsync(offer.Id);
+
+        // Assert
+        result!.MatchScore.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task ComputeMatchScore_JuniorVsMid_ReturnsPartialScore()
+    {
+        // Arrange — user Junior(2), required Mid(3) → contribution = min(2,3)/3 = 0.667 → 67
+        // Verifies partial credit for the exact case: user is one level below the requirement.
+        var tech = TestBuilders.BuildTechnology(id: 1, name: "C#");
+        _context.Technologies.Add(tech);
+        await _context.SaveChangesAsync();
+
+        _context.UserTechnologies.Add(new UserTechnology { TechnologyId = tech.Id, Level = SkillLevel.Junior });
+        var offer = TestBuilders.BuildJobOffer(id: 1);
+        _context.JobOffers.Add(offer);
+        await _context.SaveChangesAsync();
+
+        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech.Id, RequiredLevel = SkillLevel.Mid });
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _sut.GetByIdAsync(offer.Id);
+
+        // Assert — should be 67 (partial credit), not 0
+        result!.MatchScore.Should().Be(67);
+    }
+
+    [Fact]
+    public async Task ComputeMatchScore_MixedLevels_ReturnsWeightedAverage()
+    {
+        // Arrange — two skills:
+        //   skill1: user Mid(3), required Mid(3) → contribution = 1.0
+        //   skill2: user Junior(2), required Mid(3) → contribution = 2/3 ≈ 0.667
+        //   total = (1.0 + 0.667) / 2 * 100 = 83.3 → 83
+        var tech1 = TestBuilders.BuildTechnology(id: 1, name: "C#");
+        var tech2 = TestBuilders.BuildTechnology(id: 2, name: "SQL");
+        _context.Technologies.AddRange(tech1, tech2);
+        await _context.SaveChangesAsync();
+
+        _context.UserTechnologies.Add(new UserTechnology { TechnologyId = tech1.Id, Level = SkillLevel.Mid });
+        _context.UserTechnologies.Add(new UserTechnology { TechnologyId = tech2.Id, Level = SkillLevel.Junior });
+        var offer = TestBuilders.BuildJobOffer(id: 1);
+        _context.JobOffers.Add(offer);
+        await _context.SaveChangesAsync();
+
+        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech1.Id, RequiredLevel = SkillLevel.Mid });
+        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech2.Id, RequiredLevel = SkillLevel.Mid });
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _sut.GetByIdAsync(offer.Id);
+
+        // Assert
+        result!.MatchScore.Should().Be(83);
+    }
+
+    [Fact]
+    public async Task ComputeMatchScore_SkillAbsentFromProfile_ZeroContribution()
+    {
+        // Arrange — offer requires a skill the user doesn't have → 0
+        var tech = TestBuilders.BuildTechnology(id: 1, name: "Rust");
+        _context.Technologies.Add(tech);
+        await _context.SaveChangesAsync();
+
+        // No UserTechnologies added
+        var offer = TestBuilders.BuildJobOffer(id: 1);
+        _context.JobOffers.Add(offer);
+        await _context.SaveChangesAsync();
+
+        _context.JobOfferTechnologies.Add(new JobOfferTechnology { JobOfferId = offer.Id, TechnologyId = tech.Id, RequiredLevel = SkillLevel.Mid });
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _sut.GetByIdAsync(offer.Id);
+
+        // Assert
+        result!.MatchScore.Should().Be(0);
     }
 }

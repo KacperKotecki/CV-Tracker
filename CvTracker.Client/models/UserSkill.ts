@@ -1,14 +1,16 @@
+import type { SkillLevel } from './SkillLevel'
+
 export interface UserTechnology {
   id: number
   technologyId: number
   technologyName: string
   category: string
-  proficiency: number
+  level: SkillLevel
 }
 
 export interface UserTechnologyItemRequest {
   technologyId: number
-  proficiency: number
+  level: SkillLevel
 }
 
 export interface UpdateUserTechnologiesRequest {

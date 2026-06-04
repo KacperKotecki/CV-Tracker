@@ -19,6 +19,10 @@ public class AppDbContext : DbContext
             .Property(x => x.Status)
             .HasConversion<string>();
 
+        modelBuilder.Entity<UserTechnology>()
+            .Property(x => x.Level)
+            .HasConversion<string>();
+
         modelBuilder.Entity<JobOfferNote>()
             .HasOne<JobOffer>()
             .WithMany(j => j.Notes)
@@ -27,6 +31,10 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<JobOfferTechnology>()
             .HasKey(t => new { t.JobOfferId, t.TechnologyId });
+
+        modelBuilder.Entity<JobOfferTechnology>()
+            .Property(x => x.RequiredLevel)
+            .HasConversion<string>();
 
         modelBuilder.Entity<JobOfferTechnology>()
             .HasOne(t => t.JobOffer)

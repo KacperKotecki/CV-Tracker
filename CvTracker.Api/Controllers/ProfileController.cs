@@ -34,7 +34,7 @@ public class ProfileController(AppDbContext db, IWebHostEnvironment env) : Contr
                 TechnologyId = t.TechnologyId,
                 TechnologyName = t.Technology.Name,
                 Category = t.Technology.Category,
-                Proficiency = t.Proficiency,
+                Level = t.Level,
             }).ToList(),
         };
     }
@@ -56,7 +56,7 @@ public class ProfileController(AppDbContext db, IWebHostEnvironment env) : Contr
                     TechnologyId = t.TechnologyId,
                     TechnologyName = t.Technology.Name,
                     Category = t.Technology.Category,
-                    Proficiency = t.Proficiency,
+                    Level = t.Level,
                 }).ToList(),
             });
         }
@@ -168,7 +168,7 @@ public class ProfileController(AppDbContext db, IWebHostEnvironment env) : Contr
         db.UserTechnologies.AddRange(req.Technologies.Select(t => new UserTechnology
         {
             TechnologyId = t.TechnologyId,
-            Proficiency = t.Proficiency,
+            Level = t.Level,
         }));
 
         await db.SaveChangesAsync();
@@ -181,7 +181,7 @@ public class ProfileController(AppDbContext db, IWebHostEnvironment env) : Contr
             TechnologyId = t.TechnologyId,
             TechnologyName = t.Technology.Name,
             Category = t.Technology.Category,
-            Proficiency = t.Proficiency,
+            Level = t.Level,
         }).ToList());
     }
 }

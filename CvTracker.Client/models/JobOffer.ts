@@ -11,6 +11,8 @@ export interface JobOffer {
   location: string | null
   requiredSkillIds: number[]
   requiredSkillNames: string[]
+  requiredSkillLevels: Record<number, string>
+  requiredSkills?: Array<{ technologyId: number; requiredLevel: string }>
   matchScore: number | null
   sourceUrl?: string | null
   status: ApplicationStatus
