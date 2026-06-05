@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { UserProfile, UpdateUserProfileRequest } from '../../models/UserProfile'
 import type { UserTechnology, UpdateUserTechnologiesRequest } from '../../models/UserSkill'
 import type { TechnologyCategory } from '../../models/Technology'
+import type { SkillLevel } from '../../models/SkillLevel'
 import ProfileInfoCard from '../components/ProfileInfoCard'
 import SkillsCard from '../components/SkillsCard'
 import './ProfilePage.css'
@@ -61,7 +62,7 @@ export default function ProfilePage() {
   const buildSkillsRequest = (updatedSkills: UserTechnology[]): UpdateUserTechnologiesRequest => ({
     technologies: updatedSkills.map(s => ({
       technologyId: s.technologyId,
-      proficiency: s.proficiency,
+      level: s.level,
     })),
   })
 
@@ -70,7 +71,7 @@ export default function ProfilePage() {
     const exists = profile.skills.find(s => s.technologyId === technologyId)
     const updatedSkills: UserTechnology[] = exists
       ? profile.skills.filter(s => s.technologyId !== technologyId)
-      : [...profile.skills, { id: 0, technologyId, technologyName: '', category: '', proficiency: 3 }]
+      : [...profile.skills, { id: 0, technologyId, technologyName: '', category: '', level: 'Mid' as SkillLevel }]
 
     setProfile(prev => prev ? { ...prev, skills: updatedSkills } : prev)
 
@@ -86,13 +87,13 @@ export default function ProfilePage() {
     }
   }
 
-  const handleProficiencyChange = async (
+  const handleLevelChange = async (
     technologyId: number,
-    proficiency: number,
+    level: SkillLevel,
   ): Promise<void> => {
     if (!profile) return
     const updatedSkills = profile.skills.map(s =>
-      s.technologyId === technologyId ? { ...s, proficiency } : s,
+      s.technologyId === technologyId ? { ...s, level } : s,
     )
 
     setProfile(prev => prev ? { ...prev, skills: updatedSkills } : prev)
@@ -143,10 +144,11 @@ export default function ProfilePage() {
           isEditing={isEditingSkills}
           onEditToggle={() => setIsEditingSkills(v => !v)}
           onSkillToggle={handleSkillToggle}
-          onProficiencyChange={handleProficiencyChange}
+          onLevelChange={handleLevelChange}
           onCancel={() => setIsEditingSkills(false)}
         />
       </div>
     </div>
   )
 }
+

@@ -56,6 +56,36 @@
   padding: 4px 8px 8px;
 }
 
+/* Offer-mode: skill name button + level select wrapper */
+.tech-picker__offer-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Level select — used in both offer and profile modes */
+.tech-picker__level-select {
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-family: var(--sans, inherit);
+  font-size: 0.75rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-border);
+  }
+
+  &:hover {
+    border-color: var(--accent);
+  }
+}
+
 /* Offer-mode: simple toggle buttons */
 .tech-picker__skill-btn {
   padding: 3px 10px;

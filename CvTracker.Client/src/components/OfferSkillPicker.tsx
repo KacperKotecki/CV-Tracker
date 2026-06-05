@@ -1,20 +1,33 @@
 import type { TechnologyCategory } from '../../models/Technology'
+import { skillLevelLabels, type SkillLevel } from '../../models/SkillLevel'
 import TechnologyPickerAccordion from './TechnologyPickerAccordion'
+import SkillPillList from './SkillPillList'
 import './OfferSkillPicker.css'
+
+export interface OfferSkillItem {
+  technologyId: number
+  requiredLevel: string
+}
 
 interface OfferSkillPickerProps {
   categories: TechnologyCategory[]
-  value: number[]
-  onChange: (ids: number[]) => void
+  value: OfferSkillItem[]
+  onChange: (skills: OfferSkillItem[]) => void
 }
 
 export default function OfferSkillPicker({ categories, value, onChange }: OfferSkillPickerProps) {
+  const selectedIds = value.map(s => s.technologyId)
+
   const toggleSkill = (id: number) => {
-    if (value.includes(id)) {
-      onChange(value.filter(v => v !== id))
+    if (selectedIds.includes(id)) {
+      onChange(value.filter(s => s.technologyId !== id))
     } else {
-      onChange([...value, id])
+      onChange([...value, { technologyId: id, requiredLevel: 'Mid' }])
     }
+  }
+
+  const handleLevelChange = (id: number, level: SkillLevel) => {
+    onChange(value.map(s => s.technologyId === id ? { ...s, requiredLevel: level } : s))
   }
 
   // Build a flat map id→name for pill display.
@@ -27,21 +40,21 @@ export default function OfferSkillPicker({ categories, value, onChange }: OfferS
 
   return (
     <div className="offer-skill-picker">
-      {value.length > 0 && (
-        <div className="offer-skill-picker__pills">
-          {value.map(id => (
-            <span key={id} className="offer-skill-picker__pill">
-              {nameById.get(id) ?? String(id)}
-              <button type="button" className="offer-skill-picker__pill-remove" onClick={() => toggleSkill(id)}>×</button>
-            </span>
-          ))}
-        </div>
-      )}
+      <SkillPillList
+        pills={value.map(skill => ({
+          id: skill.technologyId,
+          name: nameById.get(skill.technologyId) ?? String(skill.technologyId),
+          levelLabel: skillLevelLabels[skill.requiredLevel as SkillLevel] ?? skill.requiredLevel,
+        }))}
+        onRemove={toggleSkill}
+      />
       <TechnologyPickerAccordion
         categories={categories}
-        selectedIds={value}
+        selectedIds={selectedIds}
         mode="offer"
         onToggle={toggleSkill}
+        getOfferSkillLevel={id => (value.find(s => s.technologyId === id)?.requiredLevel ?? 'Mid') as SkillLevel}
+        onOfferLevelChange={handleLevelChange}
       />
     </div>
   )

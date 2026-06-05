@@ -1,8 +1,10 @@
 import type { JobOffer } from '../../models/JobOffer'
 import type { JobOfferNote } from '../../models/JobOfferNote'
 import { applicationStatusOptions, type ApplicationStatus } from '../../models/ApplicationStatus'
+import { skillLevelLabels, type SkillLevel } from '../../models/SkillLevel'
 import { salaryRange } from '../utils/offerUtils'
 import NotesTimeline from './NotesTimeline'
+import SkillPillList from './SkillPillList'
 import './OfferDetailView.css'
 
 interface Props {
@@ -21,7 +23,20 @@ function formatDate(value: string | null): string {
 
 export default function OfferDetailView({ offer, notes, onEdit, onStatusChange, onAddNote, onDeleteNote }: Props) {
   const salary = salaryRange(offer)
-  const skills = offer.requiredSkillNames ?? []
+
+  // Build a pill list from the parallel requiredSkillIds / requiredSkillNames arrays,
+  // mapping each level string through skillLevelLabels so the label is identical to
+  // the Profile SkillsCard pills.
+  const pills = (offer.requiredSkillIds ?? []).map((id, i) => {
+    const rawLevel = offer.requiredSkillLevels?.[id]
+    return {
+      id,
+      name: offer.requiredSkillNames?.[i] ?? String(id),
+      levelLabel: rawLevel != null
+        ? (skillLevelLabels[rawLevel as SkillLevel] ?? rawLevel)
+        : '',
+    }
+  })
 
   return (
     <div className="offer-detail-view">
@@ -88,11 +103,9 @@ export default function OfferDetailView({ offer, notes, onEdit, onStatusChange, 
         )}
       </div>
 
-      {skills.length > 0 && (
+      {pills.length > 0 && (
         <div className="offer-detail-view__skills">
-          {skills.map(skill => (
-            <span key={skill} className="tag">{skill}</span>
-          ))}
+          <SkillPillList pills={pills} />
         </div>
       )}
 

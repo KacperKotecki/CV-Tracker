@@ -35,4 +35,5 @@ public class JobOffer
 
     [NotMapped] public List<int> RequiredSkillIds { get; set; } = [];
     [NotMapped] public List<string> RequiredSkillNames { get; set; } = [];
+    [NotMapped] public Dictionary<int, SkillLevel> RequiredSkillLevels { get; set; } = [];
 }
