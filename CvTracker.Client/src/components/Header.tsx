@@ -8,7 +8,7 @@ export default function Header() {
         CV<span>Tracker</span>
       </NavLink>
       <nav className="header__nav">
-        <NavLink to="/" end className="header__link">
+        <NavLink to="/" className={({ isActive }) => `header__link--outline${isActive ? ' active' : ''}`}>
           Oferty pracy
         </NavLink>
         <NavLink to="/dashboard" className={({ isActive }) => `header__link--outline${isActive ? ' active' : ''}`}>
